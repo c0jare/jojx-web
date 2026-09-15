@@ -347,6 +347,13 @@
   .cl-s { font-family: 'Hanken Grotesk', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999; display: flex; gap: 28px; font-variant-numeric: tabular-nums; }
   .cl-sky { width: 100%; height: 1px; background: #000; position: relative; }
   .cl-sun { position: absolute; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: #000; left: var(--sun, 50%); transform: translateX(-50%); transition: left 60s linear; }
+  /* BEGIN fit (hand-written, keep) — the design is a fixed 1440x900 artboard. Scale it to the
+     window by width and let the stage take the window's height, so nothing is cropped and no
+     background shows through on big screens. */
+  html, body { height: 100%; overflow: hidden; background: #000; }
+  #work { transform: scale(var(--fit, 1)); transform-origin: 0 0; }
+  .wstage, .wview, #work { height: var(--stage-h, 900px); }
+  /* END fit */
 </style>
 </helmet>
 
@@ -1318,8 +1325,9 @@ class Component extends DCLogic {
             still.play().catch(() => {});
           });
       };
-      const W = 1440, H = 900, cols = 3, rows = 5;
+      const cols = 3, rows = 5; // W/H are read live so the scatter fills whatever the stage is now
       const scatter = () => {
+        const W = dov.clientWidth || 1440, H = dov.clientHeight || 900;
         const cells = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push([c, r]);
         cells.sort(() => Math.random() - .5);
         names.forEach((a, i) => { const [c, r] = cells[i % cells.length]; const cw = (W - 120) / cols, rh = (H - 200) / rows;
@@ -1581,6 +1589,23 @@ class Component extends DCLogic {
     attach();
   }
 }
+</script>
+<script>
+  // BEGIN fit (hand-written, keep)
+  (function () {
+    var W = 1440;
+    function fit() {
+      var s = innerWidth / W;
+      var r = document.documentElement.style;
+      r.setProperty('--fit', s);
+      // the stage takes the window's height in design units, so it always fills the browser.
+      // The floor only guards against a window so short the composition collapses.
+      r.setProperty('--stage-h', Math.max(560, Math.round(innerHeight / s)) + 'px');
+    }
+    fit();
+    addEventListener('resize', fit);
+  })();
+  // END fit
 </script>
 </body>
 </html>
