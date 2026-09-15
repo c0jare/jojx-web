@@ -131,10 +131,13 @@ const dirByName = new Map(data.directors.map((d) => [d.name, `director-${d.wpId}
 // featured spots with no director-page twin and no credit field: director confirmed from the blurb / Vimeo title
 const orphanDirector = {Netflix: 'JONES', 'The Weeknd': 'Anton Tammi'}
 const featuredRefs = []
+// spots that only existed on the old homepage still belong on their director's page
+const orphanWork = []
 for (const [fi, f] of data.featured.entries()) {
   let ref = projectByVimeo.get(f.vimeoId)
+  let dirId
   if (!ref) {
-    const dirId = dirByName.get(f.credit || orphanDirector[f.brand])
+    dirId = dirByName.get(f.credit || orphanDirector[f.brand])
     if (!dirId) {
       console.warn(`  !! featured "${f.brand}" has no matching project and no credit; skipping (add by hand)`)
       continue
@@ -155,6 +158,7 @@ for (const [fi, f] of data.featured.entries()) {
       loop: await video(f.still?.loopVideoUrl),
       gridSize: f.gridType || 'half-width',
     })
+    orphanWork.push({dirId, ref})
   }
   featuredRefs.push({_type: 'reference', _key: `f${f.wpId}`, _ref: ref})
 }
@@ -239,7 +243,10 @@ const orderDocs = [
   },
   ...data.directors.map((d) => ({
     _id: `director-${d.wpId}`,
-    work: d.projects.map((p) => ({_type: 'reference', _key: `w${p.wpId}`, _ref: `project-${p.wpId}`})),
+    work: [
+      ...d.projects.map((p) => ({_type: 'reference', _key: `w${p.wpId}`, _ref: `project-${p.wpId}`})),
+      ...orphanWork.filter((o) => o.dirId === `director-${d.wpId}`).map((o) => ({_type: 'reference', _key: `w${o.ref}`, _ref: o.ref})),
+    ],
   })),
 ]
 {
