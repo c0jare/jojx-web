@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,200..800;1,300&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #fff; }
+  .m-mark { position: fixed; z-index: 75; pointer-events: none; filter: invert(1); mix-blend-mode: difference; will-change: transform, width; }
+  .m-mark.is-anim { transition: transform .8s cubic-bezier(.16,.84,.24,1), width .8s cubic-bezier(.16,.84,.24,1); }
+  #m-nu a { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .8s cubic-bezier(.16,.84,.24,1); }
+  #m-nu.is-open a { opacity: 1; transform: none; }
+  #m-nu.is-open a:nth-child(1) { transition-delay: .25s; } #m-nu.is-open a:nth-child(2) { transition-delay: .33s; } #m-nu.is-open a:nth-child(3) { transition-delay: .41s; }
+  .m-menu { position: fixed !important; top: max(20px, env(safe-area-inset-top)); right: 14px; z-index: 80; margin: 0 !important; mix-blend-mode: difference; color: #eee !important; }
+  .m-menu span { transition: transform .6s cubic-bezier(.16,.84,.24,1); }
+  .m-menu:active .m-menu-a { transform: translate(-4px, -3px); } .m-menu:active .m-menu-b { transform: translate(4px, 3px) scaleX(.58); }
+  .m-menu.is-open .m-menu-a { transform: rotate(45deg) !important; }
+  .m-menu.is-open .m-menu-b { transform-origin: 50% 50% !important; transform: rotate(-45deg) scaleX(1) !important; }
+  body { font-family: 'Hanken Grotesk', sans-serif; color: #000; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  a { color: inherit; text-decoration: none; } a:hover { color: inherit; }
+  @keyframes mlane { from { transform: translateX(var(--lw, 480px)); } to { transform: translateX(-100%); } }
+  @keyframes mlaneInL { from { transform: translateX(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes mlaneInR { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  .m-lw { will-change: transform; }
+  .m-lw:nth-of-type(1) { animation: mlaneInL 1.4s cubic-bezier(.16,.84,.24,1) .45s backwards; }
+  .m-lw:nth-of-type(2) { animation: mlaneInR 1.4s cubic-bezier(.16,.84,.24,1) .6s backwards; }
+  .m-lw:nth-of-type(3) { animation: mlaneInL 1.4s cubic-bezier(.16,.84,.24,1) .75s backwards; }
+  @keyframes markIn { from { clip-path: inset(0 100% 0 0); filter: blur(1.4px); } 70% { filter: blur(1.4px); } to { clip-path: inset(0 0 0 0); filter: blur(0); } }
+  .m-lane { will-change: transform; }
+  .m-mark { animation: markIn 1.9s cubic-bezier(.16,.84,.24,1) .15s backwards; }
+  .mt { transition: opacity .9s ease, transform 1.1s cubic-bezier(.16,.84,.24,1); }
+  .mt.is-unseen { opacity: 0; transform: translateY(22px) skewY(1.2deg); }
+  .mt-shot img { will-change: transform; }
+  .mt:active .mt-shot img { opacity: .85; }
+  .m-amb { transition: background-color 1.4s ease; }
+  #m-prog { position: fixed; top: 0; left: 0; height: 1px; width: 0; background: #000; z-index: 30; }
+  .m-ov { position: fixed; inset: 0; z-index: 50; visibility: hidden; pointer-events: none; opacity: 0; transform: translateY(24px); transition: opacity .45s ease, transform .7s cubic-bezier(.16,.84,.24,1), visibility .7s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .m-ov.is-open { visibility: visible; pointer-events: auto; opacity: 1; transform: none; }
+  .m-ov .m-close, .m-vid .m-close { display: none; }
+  .m-close { position: fixed; top: max(14px, env(safe-area-inset-top)); right: 20px; z-index: 60; padding: 12px 0 12px 12px; border: 0; background: none; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; min-height: 44px; }
+  .m-vid { position: fixed; inset: 0; z-index: 70; background: #000; display: grid; grid-template-rows: minmax(0,1fr) auto; visibility: hidden; opacity: 0; transition: opacity .4s ease, visibility .4s; }
+  .m-vid.is-open { visibility: visible; opacity: 1; }
+  .m-vid video { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+  .m-bar { display: flex; align-items: center; gap: 16px; padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; }
+  .m-btn { min-width: 44px; min-height: 44px; display: grid; place-items: center; border: 0; background: none; color: #fff; padding: 0; }
+  .m-track { flex: 1; height: 24px; display: grid; align-items: center; } .m-track span { display: block; height: 1px; background: rgba(255,255,255,.25); } .m-track i { display: block; height: 1px; width: 0; background: #fff; }
+  .m-dbg { transition: opacity 1.1s ease, transform 8s linear; transform: scale(1.04); }
+  .m-dbg.is-on { opacity: .9 !important; transform: scale(1.12); }
+  .m-dlist::-webkit-scrollbar { display: none; } .m-dlist { scrollbar-width: none; }
+  .md { opacity: .28; transform: scale(.86); transition: opacity .5s ease, transform .8s cubic-bezier(.16,.84,.24,1), letter-spacing .8s cubic-bezier(.16,.84,.24,1); filter: blur(.4px); }
+  .md.is-on { opacity: 1; transform: none; filter: none; }
+  .md.is-on em { letter-spacing: .01em; }
+  .m-row { display: grid; gap: 3px; padding: 14px 0; border-top: 1px solid #e2e2e2; }
+</style>
+</helmet>
+
+<div class="m-amb" id="m-root" data-screen-label="Mobile" style="max-width: 480px; margin: 0 auto; min-height: 100dvh;">
+  <div id="m-prog"></div>
+  <img class="m-mark" id="m-mark" src="assets/jojx-black.png" alt="JOJX" style="display: block; left: 0; top: 0; width: 240px; height: auto;">
+  <header data-screen-label="Header" style="display: flex; justify-content: flex-end; align-items: flex-start; padding: max(28px, env(safe-area-inset-top)) 24px 0; height: 78dvh; min-height: 420px; box-sizing: border-box;">
+    <button class="m-menu" id="m-menu" aria-label="Menu" style="position: relative; width: 44px; height: 44px; margin: -8px -10px 0 0; padding: 0; border: 0; background: none; color: #111;">
+      <span class="m-menu-a" style="position: absolute; right: 10px; top: 21px; width: 24px; height: 1.5px; background: currentColor; transform-origin: 50% 50%; transform: translateY(-3px);"></span>
+      <span class="m-menu-b" style="position: absolute; right: 10px; top: 21px; width: 24px; height: 1.5px; background: currentColor; transform-origin: 100% 50%; transform: translateY(3px) scaleX(.58);"></span>
+    </button>
+  </header>
+
+  <section id="work" data-screen-label="Work" style="padding: 0 0 40px;">
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/harrahs-jake-dypka.jpg" alt="Harrah's" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jake Dypka</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Harrah's</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">A single steadicam take through a casino floor at 4am. Cut to the sound of one slot machine.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/apple-vision-pro-anton-tammi.jpg" alt="Apple" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Anton Tammi</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Apple</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">A city block at blue hour, handheld, lit only by what was already on the street.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/sprite-jake-dypka.jpg" alt="Sprite" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jake Dypka</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Sprite</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">High-speed water photography against a single sheet of black. Nothing added in post.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.25; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/mercedes-benz-anton-tammi.jpg" alt="Mercedes-Benz" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Anton Tammi</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Mercedes-Benz</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Four hundred kilometres of coast road, one car, no dialogue. Shot over three nights.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/latimmier-anton-tammi.jpg" alt="Latimmier" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Anton Tammi</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Latimmier</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">A tailoring film with no faces — hands, cloth, chalk and thread, lit like a still life.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/the-north-face-anton-tammi.jpg" alt="The North Face" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Anton Tammi</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">The North Face</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Six days at altitude with a two-person crew and no second takes.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/google-scott-perry.jpg" alt="Google" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Scott Perry</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Google</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Forty questions, forty strangers, one static frame each. Nobody saw the script.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/gillette-martin-krejci.jpg" alt="Gillette" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Martin Krejčí</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Gillette</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">One bathroom, eleven minutes of footage, sixty seconds of film.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/kaiser-permanente-jones.jpg" alt="Kaiser Permanente" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jones</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Kaiser Permanente</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Documentary access to an overnight ward, shot on two 16mm bodies.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.25; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/carlsberg-martin-krejci.jpg" alt="Carlsberg" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Martin Krejčí</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Carlsberg</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">One long take through a brewery floor, timed to a live brass band.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/hp-martin-krejci.jpg" alt="HP" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Martin Krejčí</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">HP</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Practical in-camera transitions between paper and the world it depicts.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/ysl-anton-tammi.jpg" alt="YSL" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Anton Tammi</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">YSL</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Studio beauty work lit with one hard source and a mirror. No diffusion.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/asics-scott-perry.jpg" alt="ASICS" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Scott Perry</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">ASICS</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Night runs through the city on expired stock, developed twice for the grain.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/aston-martin-per-hampus-stalhandske.jpg" alt="Aston Martin" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Per-Hampus Stålhandske</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Aston Martin</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Anamorphic close work at speed — a portrait of a car in eleven details.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/hims-madeline-clayton.jpg" alt="hims" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Madeline Clayton</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">hims</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Six unscripted conversations, each one shot in a single room in a single hour.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.25; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/the-weeknd.jpg" alt="The Weeknd" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">JOJX</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">The Weeknd</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">A performance film built on one camera move that never stops travelling.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/burger-king-jake-dypka.jpg" alt="Burger King" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jake Dypka</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Burger King</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Shot entirely at a working restaurant on a Tuesday, with real customers.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/new-york-times-scott-perry.jpg" alt="New York Times" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Scott Perry</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">New York Times</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Archive and new footage cut on the frame, tracing one story across sixty years.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/klarna.jpg" alt="Klarna" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">JOJX</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Klarna</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Sets built to one flat colour each, so the wardrobe carries every cut.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/the-londoner-martin-krejci.jpg" alt="The Londoner" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Martin Krejčí</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">The Londoner</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">A hotel film shot as a continuous descent, top floor to basement.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/puma-jones.jpg" alt="Puma" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jones</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Puma</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Practical neon rigs in open landscape, lit and shot in the same forty minutes.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.25; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/qantas-madeline-clayton.jpg" alt="Qantas" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Madeline Clayton</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Qantas</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">Nine cities, one crew, no plates — every frame shot where it says it is.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/gatorade-jones.jpg" alt="Gatorade" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">Jones</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Gatorade</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">High-frame-rate sport work at 1000fps, cut back to real time in the edit.</span>
+        </span>
+      </a>
+      <a class="mt" href="#work" data-vimeo="1100115853" style="display: block; color: #111; text-decoration: none;">
+        <span class="mt-shot" style="position: relative; display: block; aspect-ratio: 1.3333; overflow: hidden; background: #f1f1f1;"><img src="uploads/JOJX-stills/work/porsche.jpg" alt="Porsche" loading="lazy" style="position: absolute; left: 0; top: -7%; display: block; width: 100%; height: 114%; object-fit: cover;"><span class="mt-dir" style="position: absolute; left: 24px; top: 24px; font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-size: 24px; line-height: 1; color: #fff;">JOJX</span></span>
+        <span style="display: block; padding: 34px 24px 44px;">
+          <span class="mt-client" style="display: block; font-family: 'EB Garamond', Georgia, serif; font-size: 52px; font-weight: 400; line-height: 1; letter-spacing: -.01em; text-wrap: balance;">Porsche</span>
+          <span style="display: block; margin-top: 26px; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; line-height: 1.3; text-wrap: pretty;">One car, one tunnel, one lap. The whole spot is the second take.</span>
+        </span>
+      </a>
+  </section>
+
+  <div class="m-ov" id="m-nu" data-screen-label="Menu" style="background: #111; color: #fff;">
+    <div style="min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 0 24px; box-sizing: border-box; gap: 8px; font-family: 'EB Garamond', Georgia, serif;">
+      <a href="#work" id="m-nav-work" style="display: block; padding: 10px 0; font-size: 56px; line-height: 1; color: #fff;">Work</a>
+      <a href="#directors" id="m-nav-dir" style="display: block; padding: 10px 0; font-size: 56px; line-height: 1; color: #fff;">Directors</a>
+      <a href="#info" id="m-nav-info" style="display: block; padding: 10px 0; font-size: 56px; line-height: 1; color: #fff;">Info</a>
+    </div>
+  </div>
+
+  <div class="m-ov" id="m-dir" data-screen-label="Directors" style="background: #000; color: #fff; overflow: hidden;">
+    <button class="m-close" data-close="m-dir" style="color: #fff;">Close</button>
+    <img class="m-dbg" id="m-dbg-a" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;">
+    <img class="m-dbg" id="m-dbg-b" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;">
+    <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.25) 40%, rgba(0,0,0,.25) 60%, rgba(0,0,0,.7)); pointer-events: none;"></div>
+    <div style="position: absolute; top: max(24px, env(safe-area-inset-top)); left: 24px; display: flex; gap: 14px; align-items: baseline; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; z-index: 2;"><span>Directors</span><span><span id="m-didx">01</span> / 15</span></div>
+    <div style="position: absolute; left: 50%; top: 50%; width: 1px; height: 28px; transform: translate(-50%, -50%); background: rgba(255,255,255,.35); pointer-events: none; z-index: 2;"></div>
+    <div class="m-dlist" id="m-dlist" style="position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; padding: calc(50dvh - 48px) 24px; box-sizing: border-box; z-index: 1;">
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/ace-norton.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/999279922/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=a96af97e5f87b97bb40571cd127e1de48a053db2728a38607a92ae5636225e88" data-i="01" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Ace</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Norton</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/alessandro-pacciani.jpg" data-clip="https://player.vimeo.com/external/560039693.hd.mp4?s=048f9f11c617b299ab641471222944a1c2578bb6&amp;profile_id=175" data-i="02" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Alessandro</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Pacciani</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/anton-tammi.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1160321301/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=cf126330b7689d4ee4c1a9cc072534cd7a7a8d65d7b5d717a54141de896a4aa1" data-i="03" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Anton</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Tammi</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/jabu-nadia-newman.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1196477272/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=057bc4e68935b45739f817a1ca09509c52ebfbc13c30df6a7ad384a81026a09b" data-i="04" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Jabu</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Nadia Newman</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/jake-dypka.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1017308170/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=eab82c0522dd8fe27eae24727d218710a1a2528e3ff41d8b47c07cf2bdcd8fcc" data-i="05" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Jake</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Dypka</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/jones.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1093869582/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=dc7fe0d8ab2bc253a21911ae12239de98113199611d686b66852a8944cc0cf93" data-i="06" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Jones</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;"></span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/madeline-clayton.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1003019066/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=cb40e27cc81bd254aca2c49b7defa887d6c804af29426babce4bdfb346735e01" data-i="07" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Madeline</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Clayton</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/martin-krejci.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1198577992/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=574283cf6fc7d96d461036d5ca9b3b60f0d1ebacd2cf131c50b3cf8eb2c33082" data-i="08" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Martin</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Krejčí</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/michael-mccourt.jpg" data-clip="https://player.vimeo.com/external/335945330.sd.mp4?s=de2ff3cfdb1857547553b6db7c52096e2ebd3301&amp;profile_id=165" data-i="09" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Michael</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">McCourt</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/oliver-wurffell.jpg" data-clip="https://player.vimeo.com/external/319613039.sd.mp4?s=0d03d70fb7ebd2488c613f9b1393a50427413cf2&amp;profile_id=165" data-i="10" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Oliver</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Würffell</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/paul-butterworth.jpg" data-clip="https://player.vimeo.com/external/560247868.hd.mp4?s=7271ff170f592994478f9a2b89eaaf1a1cf740de&amp;profile_id=175" data-i="11" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Paul</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Butterworth</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/per-hampus-stalhandske.jpg" data-clip="https://player.vimeo.com/external/560214680.hd.mp4?s=ffa5e7a2bb96e7b2a28cfd096ed0bcb2e3c9e517&amp;profile_id=175" data-i="12" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Per-Hampus</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Stålhandske</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/scott-perry.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1216262694/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=bdb31d781db22dca1c39b769280294ab6c08e87ab07a28ea2fa87c9776e09557" data-i="13" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Scott</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Perry</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/trevor-clarence.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/748969140/rendition/720p/file.mp4?loc=external&amp;signature=002b1fca0cce138f490d2760823f75307154e366f1fba57716b727c6acb2f061" data-i="14" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Trevor</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Clarence</span></a>
+        <a class="md" href="#work" data-still="uploads/JOJX-stills/directors/zac-ella.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/937915340/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=236eebd50777e566d4584b92152337b080768872334f751342e5e68135b17ba1" data-i="15" style="display: flex; align-items: center; justify-content: center; gap: .3em; min-height: 96px; scroll-snap-align: center; color: #fff; text-decoration: none; text-align: center; font-size: 42px; line-height: 1; letter-spacing: -.01em;"><em style="font-family: 'EB Garamond', Georgia, serif; font-style: italic; font-weight: 400;">Zac</em><span style="font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .02em; font-size: .82em;">Ella</span></a>
+    </div>
+  </div>
+  <div class="m-ov" id="m-info" data-screen-label="Info" style="background: #fff; color: #111;">
+    <button class="m-close" data-close="m-info">Close</button>
+    <div style="padding: 84px 20px 80px;">
+      <div style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Info</div>
+      <p style="margin: 20px 0 22px; font-size: 30px; font-weight: 300; line-height: 1.12; letter-spacing: -.02em;">Film production.<br>Venice, California.</p>
+      <p style="margin: 0 0 1em; font-size: 15px; font-weight: 300; line-height: 1.55; text-wrap: pretty;">JOJX pairs fresh ideas with an enduring work ethic to produce progressive content of the highest calibre.</p>
+      <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.55; text-wrap: pretty;">We look for true human connection in every brief, and turn a vision into a cinematic experience that lasts between brand and viewer.</p>
+
+      <div style="margin-top: 48px; padding-top: 22px; border-top: 1px solid #000; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Contact</div>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px; font-size: 16px;">
+        <a href="https://goo.gl/maps/3gbm1TxeGbx3v9bn7" style="line-height: 1.5; padding: 4px 0;">920 Abbot Kinney Blvd<br>Venice, CA 90291</a>
+        <div style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999; font-variant-numeric: tabular-nums;">Venice · <span id="m-clock">—</span> PT</div>
+        <a href="mailto:production@jojx.co" style="padding: 8px 0;">production@jojx.co</a>
+        <a href="tel:3232095025" style="padding: 8px 0; font-variant-numeric: tabular-nums;">323 209 5025</a>
+        <a href="https://instagram.com/jojx" style="padding: 8px 0;">Instagram</a>
+      </div>
+
+      <div style="margin-top: 48px; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Team</div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #e2e2e2;">
+        <a class="m-row" href="mailto:jackson@jojx.co"><span style="font-size: 17px;">Jackson Morton</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Executive Producer / Partner</span></a>
+        <a class="m-row" href="mailto:joe@jojx.co"><span style="font-size: 17px;">Joe Care</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Executive Producer / Partner</span></a>
+        <a class="m-row" href="mailto:sevasti@jojx.co"><span style="font-size: 17px;">Sevasti Buford</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Executive Producer Sales / Partner</span></a>
+        <a class="m-row" href="mailto:harry@jojx.co"><span style="font-size: 17px;">Harry Joseph</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Executive Producer</span></a>
+        <a class="m-row" href="mailto:tara@jojx.co"><span style="font-size: 17px;">Tara Spencer</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">CFO</span></a>
+        <a class="m-row" href="mailto:mk@jojx.co"><span style="font-size: 17px;">Mary Katherine Wise</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Production Manager</span></a>
+        <a class="m-row" href="mailto:jenni@jojx.co"><span style="font-size: 17px;">Jenni Zeller</span><span style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999;">Design Project Manager</span></a>
+      </div>
+
+      <div style="margin-top: 48px; font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Representation</div>
+      <div style="display: grid; gap: 28px; margin-top: 18px;">
+        <div style="display: grid; gap: 10px;"><div style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #000;">West — Red Rep</div>
+          <a href="mailto:holly@redrep.tv" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Holly Ross</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(323) 610-8888</span></a>
+          <a href="mailto:vanessa@redrep.tv" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Vanessa Mclean</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(310) 850-0019</span></a>
+          <a href="mailto:jeremy@redrep.tv" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Jeremy Hodges</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(310) 926-9722</span></a>
+        </div>
+        <div style="display: grid; gap: 10px;"><div style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #000;">Midwest — Wry Wit</div>
+          <a href="mailto:sue@wrywit.tv" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Sue Rosen</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(312) 952-7182</span></a>
+        </div>
+        <div style="display: grid; gap: 10px;"><div style="font-family: 'Hanken Grotesk', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #000;">East — Barrie Isaacson</div>
+          <a href="mailto:harry@barriei.com" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Harry White</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(212) 627-1200</span></a>
+          <a href="mailto:barrie@barriei.com" style="display: grid; gap: 2px; padding: 6px 0;"><span style="font-size: 16px;">Barrie Isaacson</span><span style="font-size: 12px; color: #8a8a8a; font-variant-numeric: tabular-nums;">(212) 627-1200</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="m-vid" id="m-vid" data-screen-label="Player">
+    <button class="m-close" data-close="m-vid" style="color: #fff;">Close</button>
+    <video id="m-video" playsinline preload="metadata" src="https://player.vimeo.com/external/459133237.hd.mp4?s=f300cd200bcc19b117605247a7946be4b05deda0&amp;profile_id=175"></video>
+    <div class="m-bar">
+      <button class="m-btn" id="m-play" aria-label="Play / pause"><svg id="m-i-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg><svg id="m-i-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z"/></svg></button>
+      <div class="m-track" id="m-track"><span><i id="m-fill"></i></span></div>
+      <button class="m-btn" id="m-mute" aria-label="Sound">Sound</button>
+      <span id="m-meta" style="max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .6;"></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+  componentDidMount() {
+    const attach = () => {
+      const vid = document.getElementById('m-vid');
+      if (!vid) { setTimeout(attach, 120); return; }
+      if (vid.__wired) return; vid.__wired = true;
+      const v = document.getElementById('m-video');
+      const fill = document.getElementById('m-fill'), meta = document.getElementById('m-meta');
+      const iP = document.getElementById('m-i-play'), iZ = document.getElementById('m-i-pause');
+      const lock = (on) => { document.body.style.overflow = on ? 'hidden' : ''; };
+      const openOv = (id) => { const el = document.getElementById(id); el.classList.add('is-open'); el.scrollTop = 0; const inner = el.querySelector('.m-dlist'); if (inner && !inner.__kept) inner.scrollTop = 0; lock(true); };
+      const closeOv = (id) => { const el = document.getElementById(id); el.classList.remove('is-open'); if (id === 'm-vid') v.pause(); lock(false); };
+      const menu = document.getElementById('m-menu'); let stack = []; let placeMark = () => {}; const mark = document.getElementById('m-mark');
+      const closeAll = () => { stack.forEach((id) => document.getElementById(id).classList.remove('is-open')); stack = []; menu.classList.remove('is-open'); lock(false); animMark(); };
+      const animMark = () => { if (!mark) return; mark.classList.add('is-anim'); placeMark(); setTimeout(() => mark.classList.remove('is-anim'), 850); };
+      const push = (id) => { openOv(id); stack.push(id); menu.classList.add('is-open'); animMark(); };
+      menu.addEventListener('click', () => { if (stack.length) { const top = stack[stack.length - 1]; if (top === 'm-vid') { closeOv('m-vid'); stack.pop(); if (stack.length) lock(true); else menu.classList.remove('is-open'); animMark(); return; } closeAll(); } else push('m-nu'); });
+      document.getElementById('m-nav-work').addEventListener('click', (e) => { e.preventDefault(); closeAll(); window.scrollTo({ top: 270, behavior: 'smooth' }); });
+      document.getElementById('m-nav-dir').addEventListener('click', (e) => { e.preventDefault(); push('m-dir'); });
+      document.getElementById('m-nav-info').addEventListener('click', (e) => { e.preventDefault(); push('m-info'); });
+      document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { closeOv(b.dataset.close); stack = stack.filter((s) => s !== b.dataset.close); if (stack.length) lock(true); else menu.classList.remove('is-open'); animMark(); }));
+      const play = (label) => { meta.textContent = label; vid.classList.add('is-open'); stack.push('m-vid'); menu.classList.add('is-open'); animMark(); lock(true); v.muted = true; v.currentTime = 0; v.play().catch(() => {}); };
+      document.querySelectorAll('.mt').forEach((t) => t.addEventListener('click', (e) => { e.preventDefault(); const c = t.querySelector('.mt-client'); play(c ? c.textContent : ''); }));
+      const dl = document.getElementById('m-dlist'), bgs = [document.getElementById('m-dbg-a'), document.getElementById('m-dbg-b')], didx = document.getElementById('m-didx');
+      let bgi = 0, curStill = '', draf = 0;
+      const track = () => { draf = 0; const r = dl.getBoundingClientRect(), cy = r.top + r.height / 2; let best = null, bd = 1e9;
+        dl.querySelectorAll('.md').forEach((a) => { const b = a.getBoundingClientRect(); const d = Math.abs(b.top + b.height / 2 - cy); if (d < bd) { bd = d; best = a; } });
+        if (!best) return; dl.querySelectorAll('.md.is-on').forEach((a) => a !== best && a.classList.remove('is-on')); best.classList.add('is-on'); if (didx) didx.textContent = best.dataset.i;
+        const st = best.dataset.still; if (st && st !== curStill) { curStill = st; bgi ^= 1; const nx = bgs[bgi], pv = bgs[bgi ^ 1]; nx.src = st; nx.classList.add('is-on'); pv.classList.remove('is-on'); } };
+      dl.addEventListener('scroll', () => { if (!draf) draf = requestAnimationFrame(track); }, { passive: true });
+      const dirNav = document.getElementById('m-nav-dir'); dirNav && dirNav.addEventListener('click', () => { setTimeout(track, 60); setTimeout(track, 500); });
+      document.querySelectorAll('.md').forEach((d) => d.addEventListener('click', (e) => { e.preventDefault(); if (d.dataset.clip) v.setAttribute('src', d.dataset.clip); play([...d.children].map((c) => c.textContent.trim()).join(' ')); }));
+      v.addEventListener('play', () => { iP.style.display = 'none'; iZ.style.display = ''; });
+      v.addEventListener('pause', () => { iP.style.display = ''; iZ.style.display = 'none'; });
+      v.addEventListener('timeupdate', () => { if (v.duration) fill.style.width = (v.currentTime / v.duration * 100).toFixed(2) + '%'; });
+      document.getElementById('m-play').addEventListener('click', () => v.paused ? v.play().catch(() => {}) : v.pause());
+      const mute = document.getElementById('m-mute');
+      mute.addEventListener('click', () => { v.muted = !v.muted; mute.textContent = v.muted ? 'Sound' : 'Mute'; });
+      document.getElementById('m-track').addEventListener('click', (e) => { if (!v.duration) return; const r = e.currentTarget.getBoundingClientRect(); v.currentTime = ((e.clientX - r.left) / r.width) * v.duration; });
+      const clock = document.getElementById('m-clock');
+      const tick = () => { if (clock) clock.textContent = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Los_Angeles' }).format(new Date()); };
+      tick(); setInterval(tick, 15000);
+      const tiles = [...document.querySelectorAll('.mt')];
+      const fit = () => {};
+      const setLW = () => { const r = document.getElementById('m-root'); if (r) r.style.setProperty('--lw', r.clientWidth + 'px'); };
+      const relayout = () => { setLW(); fit(); };
+      relayout(); window.addEventListener('resize', relayout); setTimeout(relayout, 600); document.fonts && document.fonts.ready.then(relayout);
+      tiles.forEach((t) => t.classList.add('is-unseen'));
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.remove('is-unseen'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
+      tiles.forEach((t) => io.observe(t));
+      const root = document.getElementById('m-root'), prog = document.getElementById('m-prog');
+      const ease = (t) => 1 - Math.pow(1 - t, 3);
+      placeMark = () => {
+        if (!mark) return; const rr = root.getBoundingClientRect(), W = rr.width, H = window.innerHeight;
+        const hero = Math.max(420, H * .78), p = stack.length ? 1 : ease(Math.min(1, Math.max(0, window.scrollY / (hero - 160))));
+        const w0 = W * .62, w1 = 92, x0 = (W - w0) / 2, x1 = 24, y0 = hero * .5 - w0 * .12, y1 = Math.max(24, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 28) + 2;
+        const w = w0 + (w1 - w0) * p; mark.style.width = w + 'px'; mark.style.transform = 'translate(' + (rr.left + x0 + (x1 - x0) * p).toFixed(1) + 'px,' + (y0 + (y1 - y0) * p).toFixed(1) + 'px)';
+      };
+      const imgs = tiles.map((t) => t.querySelector('.mt-shot img'));
+      const colors = new Map();
+      const sample = (img) => {
+        if (colors.has(img)) return colors.get(img);
+        if (!img.complete || !img.naturalWidth) return null;
+        try { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 8, 8); const d = x.getImageData(0, 0, 64 * 4 / 4 ? 8 : 8, 8).data; let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; } const q = d.length / 4; const out = 'rgb(' + (r / q | 0) + ',' + (g / q | 0) + ',' + (b / q | 0) + ')'; colors.set(img, out); return out; } catch (err) { colors.set(img, null); return null; }
+      };
+      let raf = 0;
+      const onScroll = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0;
+        const H = window.innerHeight, doc = document.documentElement;
+        placeMark();
+        if (prog) prog.style.width = Math.min(100, window.scrollY / Math.max(1, doc.scrollHeight - H) * 100).toFixed(2) + '%';
+        let best = null, bd = 1e9;
+        imgs.forEach((img) => { const r = img.parentElement.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return; const p = (r.top + r.height / 2 - H / 2) / H; img.style.transform = 'translateY(' + (p * 12).toFixed(2) + '%)'; if (Math.abs(p) < bd) { bd = Math.abs(p); best = img; } });
+        
+      }); };
+      window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('resize', onScroll);
+      imgs.forEach((img) => img.addEventListener('load', onScroll)); onScroll();
+    };
+    attach();
+  }
+}
+</script>
+</body>
+</html>

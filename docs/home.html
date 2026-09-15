@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,200..800;1,300&family=EB+Garamond:ital,wght@0,400;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #ffffff; font-family: 'Hanken Grotesk', sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { color: inherit; }
+  .mq img { display: block; height: 100%; width: auto; pointer-events: none; }
+  @keyframes lane { from { transform: translateX(1500px); } to { transform: translateX(-700px); } }
+  .dir { position: static; }
+  .dir .nm { display: block; padding: 6px 0; font-size: 12px; font-weight: 300; letter-spacing: .04em; white-space: nowrap; transition: opacity .25s ease; }
+  .roster:hover .dir .nm { opacity: .3; }
+  .dir:hover .nm, .dir:has(.fan:hover) .nm { opacity: 1; }
+  .fan { position: absolute; left: 300px; top: 0; bottom: 0; right: 0; display: flex; align-items: flex-start; padding-left: 64px; opacity: 0; pointer-events: none; transition: opacity .35s ease; z-index: 8; }
+  .dir:hover .fan, .fan:hover { opacity: 1; pointer-events: auto; }
+  .fan-inner { position: relative; flex: none; width: 940px; height: 350px; perspective: 2600px; perspective-origin: 20% 50%; }
+  .stage3d { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .plate { position: absolute; top: 0; left: 0; width: 300px; height: 200px; transform-style: preserve-3d; transform: translate3d(calc(var(--i) * 128px), calc(150px - var(--i) * 30px), 0); transition: transform .55s cubic-bezier(.22,.9,.24,1), filter .4s ease; filter: brightness(1.3) contrast(.7) saturate(.66); }
+  .plate img { display: block; width: 100%; height: 100%; object-fit: cover; background: #fff; }
+  .plate:hover { transform: translate3d(calc(var(--i) * 128px), calc(130px - var(--i) * 30px), 90px); filter: none; }
+  .plate .cap { position: absolute; left: 0; top: 100%; padding-top: 10px; font-size: 8px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; opacity: 0; transition: opacity .25s ease; }
+  .plate:hover .cap { opacity: 1; }
+
+  .wstage { position: relative; width: 1440px; height: 900px; cursor: none; }
+  .wstage a, .wstage button, .wstage .vo-track { cursor: none; }
+  @keyframes laneInL { from { transform: translateX(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes laneInR { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes markIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  .whead .mqw:nth-of-type(1) { animation: laneInL 2.8s cubic-bezier(.16,.84,.24,1) .45s backwards; }
+  .whead .mqw:nth-of-type(2) { animation: laneInR 2.8s cubic-bezier(.16,.84,.24,1) .75s backwards; }
+  .whead .mqw:nth-of-type(3) { animation: laneInL 2.8s cubic-bezier(.16,.84,.24,1) 1.05s backwards; }
+  .wmark { animation: markIn 1.9s cubic-bezier(.16,.84,.24,1) .15s backwards; }
+  .cur { position: absolute; left: 0; top: 0; z-index: 2147483100; pointer-events: none; width: 0; height: 0; opacity: 0; transition: opacity .3s ease; }
+  .cur-d { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #000; will-change: transform; transition: background .3s ease; }
+  .cur.has-l .cur-d, .wstage.is-dark .cur-d { background: #fff; }
+  .cur-l { position: absolute; left: 16px; top: -.6em; font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 19px; line-height: 1; letter-spacing: .02em; color: #fff; white-space: nowrap; opacity: 0; transition: opacity .3s ease; }
+  .cur.has-l .cur-l { opacity: 1; }
+  .wtrack:has(.wp:hover) .wp:not(:hover) .wp-shot { opacity: .9; }
+  .wtrack:has(.wp:hover) .wp:not(:hover) .wp-shot img { filter: grayscale(.5); }
+  .is-exit { visibility: visible !important; z-index: 2147483005 !important; transform: translateY(-100%); transition: transform 1.05s cubic-bezier(.16,.84,.24,1) !important; }
+  .is-reset, .is-reset * { transition: none !important; }
+  .vo-ghost { position: absolute; object-fit: cover; z-index: 1; pointer-events: none; transition: left 1.05s cubic-bezier(.16,.84,.24,1), top 1.05s cubic-bezier(.16,.84,.24,1), width 1.05s cubic-bezier(.16,.84,.24,1), height 1.05s cubic-bezier(.16,.84,.24,1), opacity .6s ease .7s; }
+  .vo-ghost.is-away { opacity: 0; }
+  .vo-meta i { display: inline-block; transform: translateY(1.1em); opacity: 0; transition: transform .6s cubic-bezier(.19,1,.22,1), opacity .3s ease; transition-delay: calc(var(--i, 0) * 18ms + .5s); }
+  .vo.is-open .vo-meta i { transform: none; opacity: 1; }
+  .wview { position: relative; width: 1440px; height: 900px; overflow-y: auto; overflow-x: hidden; background: #fff; scrollbar-width: none; }
+  .wview::-webkit-scrollbar { display: none; }
+  .wtrack { position: relative; width: 1440px; height: 7100px; }
+  .whead { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; z-index: 1; isolation: isolate; }
+  .mqw { position: absolute; left: 0; width: 100%; will-change: transform; }
+  .mq { position: relative; z-index: 0; width: max-content; will-change: transform; }
+  .mq img { display: block; height: 100%; width: auto; pointer-events: none; }
+  .wmark-layer { position: sticky; top: 0; height: 0; z-index: 4; }
+  .wmark-layer.is-back { z-index: 2; }
+  .wmark { position: absolute; display: block; width: 862px; left: 289px; top: 359px; pointer-events: none; transform-origin: 50% 50%; }
+  .wp { position: absolute; display: block; z-index: 3; will-change: transform; transition: opacity .3s ease; }
+  .wp:hover { z-index: 5; }
+  @keyframes drift1 { 0% { translate: 0 0; } 25% { translate: 5px -7px; } 50% { translate: -4px -11px; } 75% { translate: -7px 4px; } 100% { translate: 0 0; } }
+  @keyframes drift2 { 0% { translate: 0 0; } 30% { translate: -6px 6px; } 55% { translate: 4px 10px; } 80% { translate: 7px -3px; } 100% { translate: 0 0; } }
+  @keyframes drift3 { 0% { translate: 0 0; } 20% { translate: 8px 4px; } 60% { translate: -3px 9px; } 85% { translate: -6px -6px; } 100% { translate: 0 0; } }
+  .wp:nth-of-type(3n+1) .wp-shot { animation: drift1 9s ease-in-out infinite; }
+  .wp:nth-of-type(3n+2) .wp-shot { animation: drift2 11.5s ease-in-out infinite; }
+  .wp:nth-of-type(3n+3) .wp-shot { animation: drift3 13s ease-in-out infinite; }
+  .wp-shot { position: relative; display: block; width: 100%; overflow: hidden; background: #f1f1f1; transform-origin: 50% 50%; transition: transform 1.1s cubic-bezier(.16,.84,.24,1), opacity .7s ease; }
+  .wp:hover .wp-shot { transform: scale(1.1); }
+  .wp-shot img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter .5s ease; }
+  .wp-shot video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .45s ease; }
+  .wp-shot video.is-live { opacity: 1; }
+  .wp-client { position: absolute; left: 22px; right: 22px; bottom: 14px; font-family: 'Hanken Grotesk', sans-serif; font-size: 56px; font-weight: 200; line-height: .9; letter-spacing: -.02em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+  .wp-client i { display: inline-block; font-style: inherit; transform: translateY(.34em); opacity: 0; transition: transform .62s cubic-bezier(.19,1,.22,1), opacity .34s ease; transition-delay: calc(var(--i, 0) * 26ms); }
+  .wp:hover .wp-client i { transform: none; opacity: 1; transition-delay: calc(var(--i, 0) * 26ms + 60ms); }
+  .wp-shot, .wp-desc, .wp-vert { --settle: 0px; }
+  .wp.is-unseen .wp-shot { opacity: 0; transform: translateY(18px) skewY(1.2deg); }
+  @keyframes wp-gate { 0% { clip-path: inset(0 0 100% 0); } 16%, 84% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(100% 0 0 0); } }
+  @keyframes wp-lum { 0% { opacity: .12; } 16%, 84% { opacity: 1; } 100% { opacity: .12; } }
+  @supports (animation-timeline: view()) {
+    .wp { animation: wp-lum linear both; animation-timeline: view(block); animation-range: cover 0% cover 100%; }
+    .wp-shot img { animation: wp-gate linear both; animation-timeline: view(block); animation-range: cover 0% cover 100%; will-change: clip-path; }
+    .wp.is-unseen .wp-shot { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wp, .wp-shot img { animation: none !important; opacity: 1; clip-path: none; }
+  }
+  .wp-vert { position: absolute; top: 26px; writing-mode: vertical-rl; font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 19px; font-weight: 400; letter-spacing: .02em; white-space: nowrap; clip-path: inset(0 0 100% 0); transition: clip-path .65s cubic-bezier(.19,1,.22,1) .16s; }
+  .wp:hover .wp-vert { clip-path: inset(0 0 0 0); }
+  .wp.is-right .wp-vert { left: -60px; transform: rotate(180deg); }
+  .wp.is-left .wp-vert { left: -60px; transform: rotate(180deg); }
+  .wp-desc { display: block; padding-top: 52px; max-width: 340px; font-size: 15px; font-weight: 300; line-height: 1.5; text-wrap: pretty; clip-path: inset(0 0 100% 0); transform: translateY(10px); opacity: 0; transition: clip-path .7s cubic-bezier(.19,1,.22,1) .24s, transform .7s cubic-bezier(.19,1,.22,1) .24s, opacity .5s ease .24s; }
+  .wp:hover .wp-desc { clip-path: inset(0 0 0 0); transform: none; opacity: 1; }
+  .wcount, .whint { position: absolute; top: 26px; z-index: 9; font-size: 10px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; }
+  .wcount { left: 32px; }
+  .whint { right: 32px; color: #999; }
+  .wview { transition: opacity .4s ease; }
+  .wmenu { position: absolute; left: 60px; top: 30px; z-index: 2147483100; padding: 6px 0 0; display: flex; flex-direction: column; align-items: flex-start; color: #000; mix-blend-mode: difference; filter: invert(1); }
+  .wm-ic { position: relative; width: 44px; height: 32px; margin: -8px 0 0 -10px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
+  .wm-ic span { position: absolute; left: 10px; width: 26px; height: 2.5px; background: currentColor; transform-origin: 50% 50%; transition: transform .55s cubic-bezier(.16,.84,.24,1), opacity .3s ease; }
+  .wm-a { top: 9px; } .wm-m { top: 15px; } .wm-b { top: 21px; }
+  .wmenu:hover .wm-a { transform: translateY(-1.5px); } .wmenu:hover .wm-b { transform: translateY(1.5px); }
+  .wmenu.is-open .wm-a { transform: translateY(6px) rotate(45deg); } .wmenu.is-open .wm-m { opacity: 0; transform: scaleX(0); } .wmenu.is-open .wm-b { transform: translateY(-6px) rotate(-45deg); }
+  .wm-sheet { position: absolute; inset: -1px; z-index: 2147483090; background: #fff; color: #000; clip-path: inset(0 0 100% 0); visibility: hidden; transition: clip-path .9s cubic-bezier(.83,0,.17,1), visibility .9s; display: grid; align-content: center; padding-left: 60px; gap: 8px; }
+  .wm-sheet.is-open { clip-path: inset(0); visibility: visible; }
+  .wm-sheet .wnav { position: static; font-size: 132px; font-weight: 200; letter-spacing: -.02em; text-transform: none; line-height: 1; overflow: hidden; padding: 0; color: #000; font-variation-settings: "wght" 200; transition: font-variation-settings .35s ease, opacity .3s ease; }
+  .wm-sheet .wnav span { display: block; transform: translateY(110%); transition: transform .9s cubic-bezier(.16,.84,.24,1) .45s; }
+  .wm-sheet.is-open .wnav span { transform: none; } .wm-sheet.is-open .wnav:nth-child(2) span { transition-delay: .55s; }
+  .wm-sheet:has(.wnav:hover) .wnav:not(:hover) { opacity: .35; }
+  .wm-sheet .wnav:hover { font-variation-settings: "wght" 400; }
+  .wnav { position: absolute; z-index: 9; font-family: 'Hanken Grotesk', sans-serif; font-size: 15px; font-weight: 200; font-variation-settings: "wght" 200; letter-spacing: .3em; text-transform: uppercase; padding: 4px 0; transition: font-variation-settings .35s ease; }
+  .wnav:hover { font-variation-settings: "wght" 500; }
+  .vo { position: absolute; inset: -1px; pointer-events: none; z-index: 2147483000; background: #fff; visibility: hidden; display: grid; place-items: center; clip-path: inset(var(--vo-t, 42%) var(--vo-r, 38%) var(--vo-b, 42%) var(--vo-l, 38%)); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1), visibility 1.05s; }
+  .vo.is-open { visibility: visible; pointer-events: auto; clip-path: inset(0 0 0 0); }
+  .vo-embed video { opacity: 0; transform: scale(1.04); transition: opacity .7s cubic-bezier(.33,1,.68,1) .28s, transform 1.15s cubic-bezier(.16,.84,.24,1) .22s; }
+  .vo.is-open .vo-embed video { opacity: 1; transform: none; }
+  .vo-frame { position: relative; width: 100%; height: 100%; background: var(--amb, #fff); transition: background 1.6s linear; }
+  .vo-line { position: absolute; left: 0; bottom: 0; height: 1px; width: 100%; background: #000; transform-origin: 0 50%; transform: scaleX(0); opacity: 0; transition: opacity .4s ease; z-index: 3; }
+  .vo.is-open .vo-line { opacity: 1; }
+  .vo-embed { position: absolute; top: 60px; left: 60px; right: 60px; bottom: 108px; }
+  .vo-embed > * { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; object-fit: contain; }
+  .vo-bar { position: absolute; left: 60px; right: 60px; bottom: 0; display: flex; align-items: center; gap: 20px; padding: 26px 0; box-sizing: border-box; color: #000; opacity: 0; transition: opacity .5s cubic-bezier(.33,1,.68,1) .62s; }
+  .vo.is-open .vo-bar { opacity: 1; }
+  .vo-btn { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; background: none; color: #000; cursor: pointer; opacity: .75; transition: opacity .3s ease; }
+  .vo-btn:hover { opacity: 1; }
+  .vo-btn:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+  .vo-i-pause, .vo-i-mute { display: none; }
+  .vo.is-playing .vo-i-play { display: none; }
+  .vo.is-playing .vo-i-pause { display: block; }
+  .vo.is-muted .vo-i-vol { display: none; }
+  .vo.is-muted .vo-i-mute { display: block; }
+  .wstage video:focus, .wstage video:focus-visible, .vo-frame:focus, .vo-frame:focus-visible, .vo-embed:focus, .vo-embed:focus-visible, .vo:focus, .vo:focus-visible, .io:focus, .io:focus-visible, .dp:focus, .dp:focus-visible, .do:focus, .do:focus-visible, .wview:focus, .wview:focus-visible { outline: none; }
+  .wp:focus, .wp-shot:focus, .dp-sp:focus, .do-name:focus, .wnav:focus, .io-row:focus, .io-cl:focus, .io-rl:focus, .io-rt:focus, .io-addr:focus, .wm-ic:focus, .io-close:focus, .do-close:focus, .dp-close:focus, .vo-close:focus { outline: none; }
+  .wp:focus-visible, .dp-sp:focus-visible, .do-name:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .wnav:focus-visible, .io-row:focus-visible, .io-cl:focus-visible, .io-rl:focus-visible, .io-rt:focus-visible, .io-addr:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .vo-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .7s cubic-bezier(.33,1,.68,1) .28s; }
+  .vo.is-open .vo-iframe { opacity: 1; }
+  .vo.is-embed .vo-embed video, .vo.is-embed .vo-bar { display: none; }
+  .vo:not(.is-embed) .vo-iframe { display: none; }
+  .vo.is-embed .vo-embed { bottom: 60px; }
+  .vo-track { flex: 1; height: 14px; background: transparent; cursor: pointer; }
+  .vo-fill { display: none; }
+  .vo-time, .vo-meta { font-size: 11px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: rgba(0,0,0,.6); white-space: nowrap; }
+  .vo-embed::after { content: "This film isn't available to embed yet."; position: absolute; inset: 0; display: none; place-items: center; color: rgba(0,0,0,.5); font-size: 12px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; }
+  .vo.is-error .vo-embed::after { display: grid; }
+  .vo-close { position: absolute; top: 24px; right: 60px; padding: 0; border: 0; background: none; color: #000; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; cursor: pointer; transition: letter-spacing .5s cubic-bezier(.19,1,.22,1); }
+  .vo-close:hover { letter-spacing: .4em; }
+  .io { position: absolute; inset: -1px; z-index: 2147483000; background: #000; visibility: hidden; pointer-events: none; overflow-y: auto; clip-path: inset(0 0 100% 0); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1), visibility 1.05s; scrollbar-width: none; }
+  .io::-webkit-scrollbar { display: none; }
+  .io.is-open { visibility: visible; pointer-events: auto; clip-path: inset(0 0 0 0); }
+  .io { overflow: hidden; }
+  .io-inner { opacity: 0; transform: translateY(16px); transition: opacity .6s ease .34s, transform .9s cubic-bezier(.16,.84,.24,1) .3s; }
+  .io-sky { display: none; }
+  .io-type { white-space: pre-wrap; }
+  .io-type::after { content: ""; display: inline-block; width: 1px; height: .9em; background: #000; vertical-align: -.12em; margin-left: 2px; animation: caret 1s steps(1) infinite; }
+  .io-type.is-done::after { display: none; }
+  @keyframes caret { 50% { opacity: 0; } }
+  .io-rep { opacity: 0; transform: translateY(6px); transition: opacity .4s ease, transform .5s cubic-bezier(.16,.84,.24,1); position: absolute; inset: 38px 0 auto 0; pointer-events: none; }
+  .io-rep.is-on { opacity: 1; transform: none; pointer-events: auto; }
+  .io-rg .io-ring { transform-origin: center; transform-box: fill-box; transition: transform .6s cubic-bezier(.16,.84,.24,1), opacity .6s ease; }
+  .io-rg.is-on .io-ring { transform: scale(4); opacity: 0; }
+  .io-rg .io-dot { transition: transform .4s cubic-bezier(.16,.84,.24,1); transform-origin: center; transform-box: fill-box; }
+  .io-rg.is-on .io-dot { transform: scale(1.6); }
+  .io.is-open .io-inner { opacity: 1; transform: none; }
+  .io-close { position: absolute; top: 24px; right: 60px; padding: 0; border: 0; background: none; color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; cursor: pointer; transition: letter-spacing .5s cubic-bezier(.19,1,.22,1); }
+  .io-close:hover { letter-spacing: .4em; }
+  .io-idx { display: flex; gap: 40px; font-family: 'Hanken Grotesk', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; }
+  .io-ix { position: relative; color: #999; padding-bottom: 8px; transition: color .3s ease; }
+  .io-ix span { display: inline-block; margin-right: 10px; font-variant-numeric: tabular-nums; }
+  .io-ix::after { content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 1px; background: #000; transition: right .5s cubic-bezier(.19,1,.22,1); }
+  .io-ix.is-on { color: #000; }
+  .io-ix.is-on::after { right: 0; }
+  .io-ix:hover { color: #000; }
+  .io-k { position: sticky; top: 24px; align-self: start; }
+  .io-ln { display: block; overflow: hidden; }
+  .io-ln > span { display: block; transform: translateY(110%); transition: transform .9s cubic-bezier(.16,.84,.24,1); }
+  .io.is-open .io-ln > span { transform: none; }
+  .io.is-open .io-ln:nth-child(1) > span { transition-delay: .45s; }
+  .io.is-open .io-ln:nth-child(2) > span { transition-delay: .55s; }
+  .io-cols .io-ln > span { transition-delay: .7s !important; }
+  .io-row { position: relative; display: grid; grid-template-columns: 1fr; gap: 2px; padding: 11px 0; border-top: 1px solid #e2e2e2; opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .7s cubic-bezier(.16,.84,.24,1); transition-delay: calc(.5s + var(--d, 0) * 40ms); }
+  .io.is-open .io-row { opacity: 1; transform: none; }
+  .io-row::after { content: none; }
+  .io-nm { background-image: linear-gradient(#fff, #fff); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .5s cubic-bezier(.19,1,.22,1); width: fit-content; }
+  .io-row:hover .io-nm { background-size: 100% 1px; }
+  .io-nm { font-size: 15px; font-weight: 400; letter-spacing: -.005em; }
+  .io-go { position: absolute; right: 0; top: 50%; transform: translate(10px, -50%); font-size: 11px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; opacity: 0; transition: opacity .3s ease, transform .5s cubic-bezier(.19,1,.22,1); pointer-events: none; }
+  .io-row:hover .io-go { opacity: 1; transform: translate(0, -50%); }
+  .io-cl { display: inline-block; color: #fff; text-decoration: none; background-image: linear-gradient(#fff, #fff); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .45s cubic-bezier(.19,1,.22,1); }
+  .io-cl:hover, .io-addr:hover .io-cl { background-size: 100% 1px; }
+  .io-rl { display: inline-block; width: fit-content; align-self: flex-start; color: #fff; text-decoration: none; background-image: linear-gradient(#fff, #fff); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .45s cubic-bezier(.19,1,.22,1); }
+  .io-rl:hover { background-size: 100% 1px; }
+  .io-rt { color: #888; text-decoration: none; transition: color .3s ease; }
+  .io-rt:hover { color: #fff; }
+  .io-terr { transition: opacity .5s cubic-bezier(.19,1,.22,1); }
+  .io-reps:has(.io-terr:hover) .io-terr:not(:hover) { opacity: .28; }
+  .io-repbg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .io-repbg img { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; opacity: 0; filter: grayscale(1) contrast(1.05); transform: translateX(0); transition: opacity .7s ease, transform 4s cubic-bezier(.16,.84,.24,1); }
+  .io-repbg img.is-on { opacity: .12; transform: translateX(-3%); }
+  .do { position: absolute; inset: -1px; z-index: 2147483001; background: #000; visibility: hidden; pointer-events: none; perspective: 2000px; opacity: 0; transition: opacity .5s ease .35s, visibility .9s; }
+  .do.is-open { visibility: visible; pointer-events: auto; opacity: 1; transition: opacity .45s ease; }
+  .do-stage { position: absolute; inset: 0; display: grid; place-items: center; transform-origin: 50% 0%; transform: rotateX(-78deg) translateY(-8%); opacity: 0; transition: transform 1.05s cubic-bezier(.16,.84,.24,1), opacity .7s ease; }
+  .do.is-open .do-stage { transform: none; opacity: 1; }
+  .do-still { position: absolute; inset: 0; margin: auto; width: 43%; height: 53%; object-fit: cover; z-index: 1; opacity: 0; transform: translate(var(--dx, -14%), var(--dy, 16%)) scale(var(--ds, .82)) rotate(var(--dr, -3deg)); transition: opacity .5s ease, transform 1.1s cubic-bezier(.16,.86,.26,1); }
+  .do-still.is-on { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  .do-list { position: absolute; inset: 0; z-index: 2; }
+  .do-name { position: absolute; font-family: "EB Garamond", Georgia, serif; font-size: 38px; font-weight: 400; line-height: 1; letter-spacing: .005em; color: #8a8a8a; white-space: nowrap; transition: opacity .35s ease, color .35s ease, left 1.1s cubic-bezier(.16,.84,.24,1), top 1.1s cubic-bezier(.16,.84,.24,1); animation: doDrift 12s ease-in-out infinite alternate; }
+  .do-list:hover .do-name { opacity: .3; }
+  .do-name:hover { opacity: 1; color: #fff; }
+  .do-name em { font-style: italic; }
+  .do-name span { font-family: 'Hanken Grotesk', sans-serif; font-weight: 300; text-transform: uppercase; letter-spacing: .015em; }
+  @keyframes doDrift { to { translate: 6px -8px; } }
+  .do-shuffle { position: absolute; left: 60px; bottom: 30px; z-index: 3; font-family: 'Hanken Grotesk', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: .24em; text-transform: uppercase; color: #777; border: 0; background: none; padding: 0; cursor: pointer; transition: color .3s ease; }
+  .do-shuffle:hover { color: #fff; }
+  .do-close { position: absolute; top: 24px; right: 60px; padding: 0; border: 0; background: none; color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; cursor: pointer; z-index: 3; transition: letter-spacing .5s cubic-bezier(.19,1,.22,1); }
+  .do-close:hover { letter-spacing: .4em; }
+  .ld { position: absolute; inset: -1px; z-index: 2147483200; background: #fff; display: grid; place-items: center; clip-path: inset(0 0 0 0); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1) 1.55s, visibility 0s 2.7s; }
+  .ld { background: #000; transition: clip-path .9s cubic-bezier(.83,0,.17,1) 2.05s, visibility 0s 3s; }
+  .ld img { width: 300px; height: auto; filter: invert(1); clip-path: inset(0 100% 0 0); transform: translateX(-24px); animation: ldMark .9s cubic-bezier(.83,0,.17,1) .55s forwards; }
+  @keyframes ldMark { to { clip-path: inset(0 0 0 0); transform: none; } }
+  .ld-line { position: absolute; left: 60px; right: 60px; bottom: 60px; height: 1px; background: rgba(255,255,255,.2); }
+  .ld-line::after { content: ""; position: absolute; inset: 0; background: #fff; transform-origin: 0 50%; transform: scaleX(0); animation: ldLine 1.7s cubic-bezier(.83,0,.17,1) .25s forwards; }
+  @keyframes ldLine { 0% { transform: scaleX(0); } 55% { transform: scaleX(.62); } 100% { transform: scaleX(1); } }
+  .ld-n { position: absolute; right: 60px; bottom: 76px; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; color: #fff; font-variant-numeric: tabular-nums; }
+  .ld-k { position: absolute; left: 60px; bottom: 76px; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  .ld.is-done { clip-path: inset(0 0 100% 0); visibility: hidden; }
+  .wstage.is-loading .whead .mqw, .wstage.is-loading .wmark { animation-play-state: paused; }
+  .do { clip-path: inset(0 0 100% 0); opacity: 1; transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1), visibility 1.05s; }
+  .do.is-open { clip-path: inset(0 0 0 0); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1); }
+  .do-stage { transform: translateY(24px); opacity: 0; transition: transform 1s cubic-bezier(.16,.84,.24,1) .3s, opacity .6s ease .3s; }
+  .dp.is-vt, .dp.is-vt * { transition: none !important; }
+  .dp.is-vt { clip-path: none !important; }
+  ::view-transition-group(dp-morph) { animation-duration: .68s; animation-timing-function: cubic-bezier(.16,.84,.24,1); }
+  ::view-transition-old(dp-morph), ::view-transition-new(dp-morph) { animation-duration: .68s; mix-blend-mode: normal; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .5s; animation-timing-function: cubic-bezier(.4,0,.2,1); }
+  .dp { position: absolute; inset: -1px; z-index: 2147483002; background: #fff; color: #000; visibility: hidden; pointer-events: none; clip-path: inset(0 0 100% 0); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1), visibility 1.05s; overflow-y: auto; scrollbar-width: none; }
+  .dp::-webkit-scrollbar { display: none; }
+  .dp.is-open { visibility: visible; pointer-events: auto; clip-path: inset(0 0 0 0); }
+  .dp-hero { position: relative; height: 900px; background: #000; color: #fff; }
+  .dp-reel { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .82; }
+  .dp-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,0) 35%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
+  .dp-stack { position: absolute; left: 60px; bottom: 150px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
+  .dp-name { z-index: 2; font-size: 120px; line-height: 1; letter-spacing: -.02em; display: flex; gap: .25em; align-items: baseline; opacity: 0; transform: translateY(20px); transition: opacity .6s ease .5s, transform .9s cubic-bezier(.16,.84,.24,1) .5s; }
+  .dp.is-open .dp-name { opacity: 1; transform: none; }
+  .dp-name em { font-family: "EB Garamond", Georgia, serif; font-style: italic; font-weight: 400; }
+  .dp-name span { font-weight: 200; text-transform: uppercase; letter-spacing: .01em; }
+  .dp-name { white-space: nowrap; transform-origin: 0 100%; }
+  .dp-lead { position: static; z-index: 2; width: 640px; max-width: 640px; font-family: "EB Garamond", Georgia, serif; font-size: 20px; line-height: 1.35; text-wrap: pretty; color: rgba(255,255,255,.85); opacity: 0; transition: opacity .6s ease .8s; }
+  .dp.is-open .dp-lead { opacity: 1; }
+  .dp-body { display: grid; grid-template-columns: 1fr; padding: 40px 60px 96px 360px; }
+  .dp-k { margin-bottom: 22px; font-size: 11px; font-weight: 400; letter-spacing: .24em; text-transform: uppercase; color: #999; }
+  .dp-aside { display: flex; flex-direction: column; gap: 18px; align-self: start; position: sticky; top: 96px; }
+  .dp-cue { position: absolute; left: 60px; bottom: 54px; z-index: 2; display: block; height: 72px; width: 300px; color: #fff; opacity: 0; transition: opacity .8s .35s ease; text-decoration: none; cursor: pointer; user-select: none; -webkit-user-select: none; font-size: 13px; letter-spacing: .32em; text-transform: uppercase; font-weight: 400; }
+  .dp.is-open .dp-cue { opacity: 1; }
+  .dp-cue:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .dp-cue-tx { position: absolute; left: 0; top: 50%; translate: 0 -50%; white-space: nowrap; transform: translate(calc(var(--sx, 0px) + var(--mx, 0px)), var(--my, 0px)); transition: transform .6s cubic-bezier(.16,.84,.24,1); }
+  .dp-cue:hover .dp-cue-tx, .dp-cue:focus-visible .dp-cue-tx { --sx: 0px; }
+  .dp-cue-vec { position: absolute; left: 184px; top: 50%; height: 1px; width: 0; background: #fff; transform: translate(var(--vx, 0px), calc(-50% + var(--vy, 0px))); transition: width .6s cubic-bezier(.16,.84,.24,1), transform .12s ease-out; }
+  .dp-cue-vec::after { content: ""; position: absolute; right: -1px; top: -3px; width: 6px; height: 6px; border-top: 1px solid #fff; border-right: 1px solid #fff; transform: rotate(45deg); }
+  .dp-cue:hover .dp-cue-vec, .dp-cue:focus-visible .dp-cue-vec { width: 64px; }
+  .dp-cue.rel .dp-cue-tx, .dp-cue.rel .dp-cue-vec, .dp-back.rel .dp-cue-tx, .dp-back.rel .dp-cue-vec { transition: transform .7s cubic-bezier(.16,1.3,.3,1), width .6s cubic-bezier(.16,.84,.24,1); }
+  .dp-bio-w { display: inline-block; opacity: 0; filter: blur(6px); transform: translateY(.42em); transition: opacity .7s ease, filter .7s ease, transform .7s cubic-bezier(.16,.84,.24,1); }
+  .dp-body.is-in .dp-bio-w { opacity: 1; filter: blur(0); transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .dp-cue-tx, .dp-cue-vec { transition: none; }
+    .dp-bio-w { opacity: 1 !important; filter: none !important; transform: none !important; transition: none; }
+  }
+  .dp-req { display: block; padding: 14px 0; border: 1px solid #000; text-align: center; font-size: 11px; font-weight: 400; letter-spacing: .24em; text-transform: uppercase; color: #000; text-decoration: none; transition: background .4s cubic-bezier(.19,1,.22,1), color .4s; }
+  .dp-req:hover { background: #000; color: #fff; }
+  .dp-req:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+  .dp-bio { max-width: 720px; font-size: 19px; font-weight: 300; line-height: 1.55; color: #222; text-wrap: pretty; }
+  .dp-links { display: flex; gap: 32px; margin-top: 40px; font-size: 13px; font-weight: 300; letter-spacing: .04em; }
+  .dp-links a { border-bottom: 1px solid rgba(0,0,0,.25); padding-bottom: 2px; transition: border-color .3s; } .dp-links a:hover { border-color: #000; }
+  .dp-work { position: relative; padding: 60px 60px 140px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 28px 24px; }
+  .dp-sp { position: relative; display: block; grid-column: span 4; cursor: pointer; }
+  .dp-sp:hover { z-index: 3; }
+  .dp-sp:nth-child(5n+1) { grid-column: span 6; } .dp-sp:nth-child(5n+3) { grid-column: 8 / span 5; } .dp-sp:nth-child(5n+4) { grid-column: 2 / span 4; margin-top: 60px; }
+  .dp-sp .sh { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #eee; transform-origin: 50% 50%; transition: transform 1.1s cubic-bezier(.16,.84,.24,1), opacity .7s ease; }
+  .dp-sp:nth-child(3n+1) .sh { animation: drift1 9s ease-in-out infinite; } .dp-sp:nth-child(3n+2) .sh { animation: drift2 11.5s ease-in-out infinite; } .dp-sp:nth-child(3n+3) .sh { animation: drift3 13s ease-in-out infinite; }
+  .dp-sp:hover .sh { transform: scale(1.06); }
+  .dp-sp.is-unseen .sh { opacity: 0; transform: translateY(18px) skewY(1.2deg); }
+  .dp-sp { will-change: transform; }
+  .dp-work:has(.dp-sp:hover) .dp-sp:not(:hover) .sh img { filter: grayscale(.5); } .dp-sp .sh img { transition: filter .5s ease, transform 1.1s cubic-bezier(.16,.84,.24,1); }
+  .dp-sp .sh img, .dp-sp .sh video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.1s cubic-bezier(.16,.84,.24,1), opacity .4s ease; }
+  .dp-sp:hover .sh img, .dp-sp:hover .sh video { transform: scale(1.04); }
+  .dp-sp .sh video { opacity: 0; } .dp-sp.has-v:hover .sh video { opacity: 1; }
+  .dp-sp.is-frame .sh video { opacity: 1; }
+  .dp-work:has(.dp-sp:hover) .dp-sp.is-frame:not(:hover) .sh video { filter: grayscale(.5); }
+  .dp-sp.is-frame .sh video { transition: filter .5s ease, transform 1.1s cubic-bezier(.16,.84,.24,1); }
+  .dp-sp .cl { display: block; margin-top: 14px; font-size: 22px; font-weight: 200; letter-spacing: -.01em; text-transform: uppercase; }
+  .dp-sp .ti { display: block; margin-top: 4px; font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 17px; color: #777; }
+  .dp-work:has(.dp-sp:hover) .dp-sp:not(:hover) { opacity: .45; } .dp-sp { transition: opacity .4s ease; }
+  .dp-bar { position: sticky; top: 0; height: 0; z-index: 5; mix-blend-mode: difference; }
+  .dp-close { position: absolute; top: 24px; right: 60px; padding: 0; border: 0; background: none; color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: .3em; text-transform: uppercase; cursor: pointer; z-index: 5; transition: letter-spacing .5s cubic-bezier(.19,1,.22,1); }
+  .dp-close:hover { letter-spacing: .4em; }
+  .dp-back { position: absolute; top: 33px; left: 106px; height: 22px; line-height: 22px; padding: 0; border: 0; background: none; color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: .3em; text-transform: uppercase; text-align: left; cursor: pointer; z-index: 5; }
+  .dp-back .dp-cue-tx { position: static; translate: none; display: inline-block; transform: translate(var(--mx, 0px), var(--my, 0px)); }
+  .dp-back .dp-cue-vec { left: 100%; margin-left: 14px; width: 0; }
+  .dp-back:hover .dp-cue-vec, .dp-back:focus-visible .dp-cue-vec { width: 22px; }
+  .dp-nav { display: flex; justify-content: space-between; padding: 0 60px 60px; font-size: 32px; font-weight: 200; }
+  .dp-nav a em { font-family: "EB Garamond", Georgia, serif; font-style: italic; font-weight: 400; } .dp-nav a span { text-transform: uppercase; }
+  .dp-nav .dp-lean { display: inline-block; transform: translate(var(--mx, 0px), var(--my, 0px)); transition: transform .6s cubic-bezier(.16,.84,.24,1); }
+  .dp-nav a.rel .dp-lean { transition: transform .7s cubic-bezier(.16,1.3,.3,1); }
+  @media (prefers-reduced-motion: reduce) { .dp-nav .dp-lean { transition: none; transform: none; } }
+  .dp-nav small { display: block; font-size: 11px; font-weight: 400; letter-spacing: .24em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+  .wstage:has(.dp.is-open) .cur-d { background: #000; }
+  .wstage:has(.dp.is-open) .cur.has-l .cur-d, .wstage:has(.dp.is-open) .cur.is-hero .cur-d { background: #fff; }
+  .do-name { cursor: pointer; }
+  .wstage:has(.io.is-open) .cur-d { background: #fff; }
+  .nf { position: absolute; inset: -1px; z-index: 2147483000; background: #000; color: #fff; visibility: hidden; pointer-events: none; clip-path: inset(0 0 100% 0); transition: clip-path 1.05s cubic-bezier(.16,.84,.24,1), visibility 1.05s; }
+  .nf.is-open { visibility: visible; pointer-events: auto; clip-path: inset(0 0 0 0); }
+  .nf img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; filter: grayscale(1) contrast(1.1); }
+  .nf-in { position: absolute; left: 60px; bottom: 60px; right: 60px; display: grid; gap: 22px; }
+  .nf-code { font-family: 'Hanken Grotesk', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
+  .nf-t { font-family: "EB Garamond", Georgia, serif; font-size: 72px; line-height: 1; letter-spacing: -.01em; }
+  .nf-t em { font-style: italic; }
+  .nf-back { justify-self: start; font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: #fff; padding: 0; border: 0; background: none; cursor: pointer; transition: letter-spacing .5s cubic-bezier(.19,1,.22,1); }
+  .nf-back:hover { letter-spacing: .4em; }
+  .cl { display: grid; gap: 14px; }
+  .cl-t { font-family: 'Hanken Grotesk', sans-serif; font-size: 168px; font-weight: 200; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 18px; }
+  .cl-t small { font-size: 22px; font-weight: 400; letter-spacing: .1em; }
+  .cl-s { font-family: 'Hanken Grotesk', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #999; display: flex; gap: 28px; font-variant-numeric: tabular-nums; }
+  .cl-sky { width: 100%; height: 1px; background: #000; position: relative; }
+  .cl-sun { position: absolute; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: #000; left: var(--sun, 50%); transform: translateX(-50%); transition: left 60s linear; }
+</style>
+</helmet>
+
+<section id="work" data-screen-label="Work" style="width: 1440px; box-sizing: border-box; background: #fff;">
+  <div class="wstage is-loading">
+  <div class="ld" id="ld"><img src="assets/jojx-black.png" alt="JOJX"><span class="ld-k">Film production · Venice</span><span class="ld-n" id="ld-n">000</span><span class="ld-line"></span></div>
+  <div class="wview">
+    <div class="wmark-layer">
+      <img class="wmark wmark-b" src="assets/jojx-black.png" alt="JOJX">
+    </div>
+    <div class="wtrack">
+      <div class="whead">
+      <div class="mqw" style="top: 20px;" data-speed="0.42">
+        <div class="mq" style="height: 250px; animation: lane 38s -4s linear infinite;"><img src="uploads/JOJX-stills/work/latimmier-anton-tammi.jpg" alt=""></div>
+      </div>
+      <div class="mqw" style="top: 320px;" data-speed="0.18">
+        <div class="mq" style="height: 290px; animation: lane 46s -24s linear infinite;"><img src="uploads/JOJX-stills/work/harrahs-jake-dypka.jpg" alt=""></div>
+      </div>
+      <div class="mqw" style="top: 660px;" data-speed="0.3">
+        <div class="mq" style="height: 225px; animation: lane 42s -14s linear infinite;"><img src="uploads/JOJX-stills/work/kaiser-permanente-jones.jpg" alt=""></div>
+      </div>
+      </div>
+<a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1207503829" data-clip="https://player.vimeo.com/progressive_redirect/playback/1207503829/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=94e410742385b8ad6a8992620d19d9cb129ba44fbd8b8c3e799efcc0fe011db7" data-title="The Movement" style="left: 70px; top: 780px; width: 430px;" data-speed="0.070">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/harrahs-jake-dypka.jpg" alt="Harrah's">
+          <span class="wp-client">Harrah's</span>
+        </span>
+        <span class="wp-vert">Jake Dypka</span>
+        <span class="wp-desc"><em>The Movement</em> — Large-scale filmmaking with a craft-first approach and a trademark dry humour.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1162661689" data-clip="https://player.vimeo.com/progressive_redirect/playback/1162661689/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=bec3f5a414126a090866cd49aca1bf3a9fc58feb75028078248055aac741a4e0" data-title="The Weeknd “Open Hearts” Trailer" style="left: 880px; top: 1020px; width: 480px;" data-speed="0.028">
+        <span class="wp-shot" style="height: 300px;">
+          <img src="uploads/JOJX-stills/work/apple-vision-pro-anton-tammi.jpg" alt="Apple Vision Pro">
+          <span class="wp-client">Apple Vision Pro</span>
+        </span>
+        <span class="wp-vert">Anton Tammi</span>
+        <span class="wp-desc"><em>The Weeknd “Open Hearts” Trailer</em> — An immersive music journey weaving sound and space into a surreal cityscape.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1145424205" data-clip="https://player.vimeo.com/progressive_redirect/playback/1145424205/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=f4cc32f9163ae47c0f3027e831626c5ad89a60350306e24b3dfd21e2b432869e" data-title="Bum Burn" style="left: 430px; top: 1240px; width: 380px;" data-speed="0.077">
+        <span class="wp-shot" style="height: 230px;">
+          <img src="uploads/JOJX-stills/work/sprite-jake-dypka.jpg" alt="Sprite">
+          <span class="wp-client">Sprite</span>
+        </span>
+        <span class="wp-vert">Jake Dypka</span>
+        <span class="wp-desc"><em>Bum Burn</em> — A global summer campaign built on scorching temperatures and crisp refreshment.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1162668771" data-clip="https://player.vimeo.com/progressive_redirect/playback/1162668771/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=0daffc39b2060d4c3e71c9af561cb045b4b2b5669c31ff9929dd330d7a688a96" data-title="Neon Legacy feat. Roger Federer" style="left: 1010px; top: 1480px; width: 400px;" data-speed="0.045">
+        <span class="wp-shot" style="height: 240px;">
+          <img src="uploads/JOJX-stills/work/mercedes-benz-anton-tammi.jpg" alt="Mercedes-Benz">
+          <span class="wp-client">Mercedes-Benz</span>
+        </span>
+        <span class="wp-vert">Anton Tammi</span>
+        <span class="wp-desc"><em>Neon Legacy feat. Roger Federer</em> — Performance through precision and presence — a legacy that extends beyond the road.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1214715724" data-clip="https://player.vimeo.com/progressive_redirect/playback/1214715724/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=c161641eb688476d3ffa49fc6f273854ee92414d26cffc9f6b7605454b5be880" data-title="One Story Away" style="left: 80px; top: 1700px; width: 360px;" data-speed="0.025">
+        <span class="wp-shot" style="height: 460px;">
+          <img src="uploads/JOJX-stills/work/netflix.jpg" alt="Netflix">
+          <span class="wp-client">Netflix</span>
+        </span>
+        <span class="wp-vert">Jones</span>
+        <span class="wp-desc"><em>One Story Away</em> — The red progress bar as a visual link across a first global brand campaign.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1162665817" data-clip="https://player.vimeo.com/progressive_redirect/playback/1162665817/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=8afab5ab071cd8de922bb1cb18bfdd8b9f66b277cce40bc390cde214e1c5c5fb" data-title="Wherever You Go, We Go" style="left: 640px; top: 1950px; width: 470px;" data-speed="0.066">
+        <span class="wp-shot" style="height: 270px;">
+          <img src="uploads/JOJX-stills/work/the-north-face-anton-tammi.jpg" alt="The North Face">
+          <span class="wp-client">The North Face</span>
+        </span>
+        <span class="wp-vert">Anton Tammi</span>
+        <span class="wp-desc"><em>Wherever You Go, We Go</em> — A return to the outdoors, reframing heritage through modern scale and motion.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1145086521" data-clip="https://player.vimeo.com/progressive_redirect/playback/1145086521/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=def7b4a59acf19bda4b803323f9dddae6e31460be394dcb7028018845f89301c" data-title="Not Built For Easy" style="left: 1000px; top: 2190px; width: 420px;" data-speed="0.021">
+        <span class="wp-shot" style="height: 260px;">
+          <img src="uploads/JOJX-stills/work/nissan-rogue.jpg" alt="Nissan Rogue">
+          <span class="wp-client">Nissan Rogue</span>
+        </span>
+        <span class="wp-vert">Alessandro Pacciani</span>
+        <span class="wp-desc"><em>Not Built For Easy</em> — Shot entirely in-camera with real stunts and zero AI — a defiantly analogue stance.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1162656211" data-clip="https://player.vimeo.com/progressive_redirect/playback/1162656211/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=4b6f682639ef7418768f3bc2f44ae2b644e8b63a69dac56243462537fa785f34" data-title="Black Opium ft. Zoë Kravitz" style="left: 120px; top: 2420px; width: 450px;" data-speed="0.056">
+        <span class="wp-shot" style="height: 280px;">
+          <img src="uploads/JOJX-stills/work/ysl-anton-tammi.jpg" alt="YSL">
+          <span class="wp-client">YSL</span>
+        </span>
+        <span class="wp-vert">Anton Tammi</span>
+        <span class="wp-desc"><em>Black Opium ft. Zoë Kravitz</em> — A bold celebration of night, movement and desire.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1093841076" data-clip="https://player.vimeo.com/progressive_redirect/playback/1093841076/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=24ecaba33c8af38b8401e73c1e32db270438c69945029f5ae84dbc4b0d33d549" data-title="Deep feat. Steph Curry" style="left: 560px; top: 2650px; width: 400px;" data-speed="0.035">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/kaiser-permanente-jones.jpg" alt="Kaiser Permanente">
+          <span class="wp-client">Kaiser Permanente</span>
+        </span>
+        <span class="wp-vert">Jones</span>
+        <span class="wp-desc"><em>Deep feat. Steph Curry</em> — A quiet gut-punch — an athlete’s inner world revealed.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1198910830" data-clip="https://player.vimeo.com/progressive_redirect/playback/1198910830/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=896a0be21fe8615b99eff9823bb207ab373f72d63619ffcf31bd11cb87b8900d" style="left: 1040px; top: 2880px; width: 380px;" data-speed="0.073">
+        <span class="wp-shot" style="height: 240px;">
+          <img src="uploads/JOJX-stills/work/carlsberg-martin-krejci.jpg" alt="Carlsberg">
+          <span class="wp-client">Carlsberg</span>
+        </span>
+        <span class="wp-vert">Martin Krejčí</span>
+        <span class="wp-desc">One long take through a brewery floor, timed to a live brass band.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1198577992" data-clip="https://player.vimeo.com/progressive_redirect/playback/1198577992/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=574283cf6fc7d96d461036d5ca9b3b60f0d1ebacd2cf131c50b3cf8eb2c33082" data-title="Cookie Problem" style="left: 90px; top: 3100px; width: 420px;" data-speed="0.032">
+        <span class="wp-shot" style="height: 260px;">
+          <img src="uploads/JOJX-stills/work/hp-martin-krejci.jpg" alt="HP">
+          <span class="wp-client">HP</span>
+        </span>
+        <span class="wp-vert">Martin Krejčí</span>
+        <span class="wp-desc"><em>Cookie Problem</em> — A snack-sized story with bite: the smallest things trigger the grandest dramas.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1162647425" data-clip="https://player.vimeo.com/progressive_redirect/playback/1162647425/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=4f676bd5b787a6254289efc8aa8d23c102fd124d7711bae35c57f7959eeda8cd" style="left: 700px; top: 3320px; width: 460px;" data-speed="0.049">
+        <span class="wp-shot" style="height: 290px;">
+          <img src="uploads/JOJX-stills/work/latimmier-anton-tammi.jpg" alt="Latimmier">
+          <span class="wp-client">Latimmier</span>
+        </span>
+        <span class="wp-vert">Anton Tammi</span>
+        <span class="wp-desc">A tailoring film with no faces — hands, cloth, chalk and thread, lit like a still life.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1216262694" data-clip="https://player.vimeo.com/progressive_redirect/playback/1216262694/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=bdb31d781db22dca1c39b769280294ab6c08e87ab07a28ea2fa87c9776e09557" style="left: 1000px; top: 3560px; width: 400px;" data-speed="0.063">
+        <span class="wp-shot" style="height: 300px;">
+          <img src="uploads/JOJX-stills/work/asics-scott-perry.jpg" alt="ASICS">
+          <span class="wp-client">ASICS</span>
+        </span>
+        <span class="wp-vert">Scott Perry</span>
+        <span class="wp-desc">Night runs through the city on expired stock, developed twice for the grain.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/821025337" data-clip="https://player.vimeo.com/progressive_redirect/playback/821025337/rendition/1080p/file.mp4?loc=external&amp;signature=410f618b930aab0a61b898d5f905598252610221756d9d71d04dbd0d74899e3e" style="left: 110px; top: 3800px; width: 470px;" data-speed="0.038">
+        <span class="wp-shot" style="height: 260px;">
+          <img src="uploads/JOJX-stills/work/aston-martin-per-hampus-stalhandske.jpg" alt="Aston Martin">
+          <span class="wp-client">Aston Martin</span>
+        </span>
+        <span class="wp-vert">Per-Hampus Stålhandske</span>
+        <span class="wp-desc">Anamorphic close work at speed — a portrait of a car in eleven details.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1145422740" data-clip="https://player.vimeo.com/progressive_redirect/playback/1145422740/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=c939893dd1dbbde3897d38c6fa5267bdd82324a5352c82b13d09f51936ad6d5c" style="left: 640px; top: 4040px; width: 420px;" data-speed="0.081">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/hims-madeline-clayton.jpg" alt="hims">
+          <span class="wp-client">hims</span>
+        </span>
+        <span class="wp-vert">Madeline Clayton</span>
+        <span class="wp-desc">Six unscripted conversations, each one shot in a single room in a single hour.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1214715112" data-clip="https://player.vimeo.com/progressive_redirect/playback/1214715112/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=01a2bb47c4b27e6e69a8b77ccf3b4978ab7d6849ad96adb6f0e58ed526d1d3da" style="left: 1010px; top: 4280px; width: 390px;" data-speed="0.025">
+        <span class="wp-shot" style="height: 240px;">
+          <img src="uploads/JOJX-stills/work/the-weeknd.jpg" alt="The Weeknd">
+          <span class="wp-client">The Weeknd</span>
+        </span>
+        <span class="wp-vert">JOJX</span>
+        <span class="wp-desc">A performance film built on one camera move that never stops travelling.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1017308052" data-clip="https://player.vimeo.com/progressive_redirect/playback/1017308052/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=dec1332e0634ae250a7b245d7dc6779e5b01922883224d0969dd1e9d0133057a" style="left: 80px; top: 4500px; width: 440px;" data-speed="0.070">
+        <span class="wp-shot" style="height: 270px;">
+          <img src="uploads/JOJX-stills/work/burger-king-jake-dypka.jpg" alt="Burger King">
+          <span class="wp-client">Burger King</span>
+        </span>
+        <span class="wp-vert">Jake Dypka</span>
+        <span class="wp-desc">Shot entirely at a working restaurant on a Tuesday, with real customers.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1069773632" data-clip="https://player.vimeo.com/progressive_redirect/playback/1069773632/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=e8b6b18a1786e31804abf3c483dc54fa416bce1d1cef782815001322b36969ce" style="left: 580px; top: 4740px; width: 460px;" data-speed="0.042">
+        <span class="wp-shot" style="height: 290px;">
+          <img src="uploads/JOJX-stills/work/new-york-times-scott-perry.jpg" alt="New York Times">
+          <span class="wp-client">New York Times</span>
+        </span>
+        <span class="wp-vert">Scott Perry</span>
+        <span class="wp-desc">Archive and new footage cut on the frame, tracing one story across sixty years.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1017310486" data-clip="https://player.vimeo.com/progressive_redirect/playback/1017310486/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=3e714278cee6f1878c496c3c74d431a3c0ced0fcfa766651155b308e5ef334ad" style="left: 1020px; top: 4980px; width: 380px;" data-speed="0.059">
+        <span class="wp-shot" style="height: 290px;">
+          <img src="uploads/JOJX-stills/work/klarna.jpg" alt="Klarna">
+          <span class="wp-client">Klarna</span>
+        </span>
+        <span class="wp-vert">JOJX</span>
+        <span class="wp-desc">Sets built to one flat colour each, so the wardrobe carries every cut.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1216221248" data-clip="https://player.vimeo.com/progressive_redirect/playback/1216221248/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=96ad06905a842d687d59ac8100cc6b600255fbf44aa58cdf56626fefb41d4f89" style="left: 100px; top: 5200px; width: 450px;" data-speed="0.028">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/the-londoner-martin-krejci.jpg" alt="The Londoner">
+          <span class="wp-client">The Londoner</span>
+        </span>
+        <span class="wp-vert">Martin Krejčí</span>
+        <span class="wp-desc">A hotel film shot as a continuous descent, top floor to basement.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1129606795" data-clip="https://player.vimeo.com/progressive_redirect/playback/1129606795/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=becba13de8c760aab5e39a3aa690010b6e6733aea098873de7a2d19ff69bd3af" style="left: 640px; top: 5430px; width: 430px;" data-speed="0.073">
+        <span class="wp-shot" style="height: 260px;">
+          <img src="uploads/JOJX-stills/work/puma-jones.jpg" alt="Puma">
+          <span class="wp-client">Puma</span>
+        </span>
+        <span class="wp-vert">Jones</span>
+        <span class="wp-desc">Practical neon rigs in open landscape, lit and shot in the same forty minutes.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1145086776" data-clip="https://player.vimeo.com/progressive_redirect/playback/1145086776/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=40cdaf27f6868c4f976edd54fce17a568cd37a08f46c314221be7e6cb8ce7d8a" style="left: 1000px; top: 5660px; width: 410px;" data-speed="0.035">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/qantas-madeline-clayton.jpg" alt="Qantas">
+          <span class="wp-client">Qantas</span>
+        </span>
+        <span class="wp-vert">Madeline Clayton</span>
+        <span class="wp-desc">Nine cities, one crew, no plates — every frame shot where it says it is.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1093838997" data-clip="https://player.vimeo.com/progressive_redirect/playback/1093838997/rendition/720p/file.mp4?loc=external&amp;log_user=0&amp;signature=6d1133d4060898de87fcc72cc802bb72f83002c9a26242acf1174290bdc433b5" style="left: 110px; top: 5890px; width: 400px;" data-speed="0.066">
+        <span class="wp-shot" style="height: 250px;">
+          <img src="uploads/JOJX-stills/work/gatorade-jones.jpg" alt="Gatorade">
+          <span class="wp-client">Gatorade</span>
+        </span>
+        <span class="wp-vert">Jones</span>
+        <span class="wp-desc">High-frame-rate sport work at 1000fps, cut back to real time in the edit.</span>
+      </a>
+      <a class="wp is-left" href="#work" data-embed="https://player.vimeo.com/video/1144650022" data-clip="https://player.vimeo.com/progressive_redirect/playback/1144650022/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=b22842793d7162ccdb32ab605f2f7839ff0fa01df9239f80bc6ea8d4467ee316" style="left: 620px; top: 6120px; width: 470px;" data-speed="0.045">
+        <span class="wp-shot" style="height: 290px;">
+          <img src="uploads/JOJX-stills/work/porsche.jpg" alt="Porsche">
+          <span class="wp-client">Porsche</span>
+        </span>
+        <span class="wp-vert">JOJX</span>
+        <span class="wp-desc">One car, one tunnel, one lap. The whole spot is the second take.</span>
+      </a>
+    </div>
+  </div>
+  <div class="do" id="do">
+    <div class="do-stage">
+      <video class="do-still" id="do-still" muted loop playsinline preload="none"></video>
+      <div class="do-list">
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/ace-norton.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/999279922/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=a96af97e5f87b97bb40571cd127e1de48a053db2728a38607a92ae5636225e88"><em>Ace</em> <span>Norton</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/alessandro-pacciani.jpg" data-clip="https://player.vimeo.com/external/560039693.hd.mp4?s=048f9f11c617b299ab641471222944a1c2578bb6&amp;profile_id=175"><em>Alessandro</em> <span>Pacciani</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/anton-tammi.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1160321301/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=cf126330b7689d4ee4c1a9cc072534cd7a7a8d65d7b5d717a54141de896a4aa1"><em>Anton</em> <span>Tammi</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/jabu-nadia-newman.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1196477272/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&amp;log_user=0&amp;signature=057bc4e68935b45739f817a1ca09509c52ebfbc13c30df6a7ad384a81026a09b"><em>Jabu</em> <span>Nadia Newman</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/jake-dypka.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1017308170/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=eab82c0522dd8fe27eae24727d218710a1a2528e3ff41d8b47c07cf2bdcd8fcc"><em>Jake</em> <span>Dypka</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/jones.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1093869582/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=dc7fe0d8ab2bc253a21911ae12239de98113199611d686b66852a8944cc0cf93"><span>Jones</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/madeline-clayton.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1003019066/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=cb40e27cc81bd254aca2c49b7defa887d6c804af29426babce4bdfb346735e01"><em>Madeline</em> <span>Clayton</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/martin-krejci.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1198577992/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=574283cf6fc7d96d461036d5ca9b3b60f0d1ebacd2cf131c50b3cf8eb2c33082"><em>Martin</em> <span>Krejčí</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/michael-mccourt.jpg" data-clip="https://player.vimeo.com/external/335945330.sd.mp4?s=de2ff3cfdb1857547553b6db7c52096e2ebd3301&amp;profile_id=165"><em>Michael</em> <span>McCourt</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/oliver-wurffell.jpg" data-clip="https://player.vimeo.com/external/319613039.sd.mp4?s=0d03d70fb7ebd2488c613f9b1393a50427413cf2&amp;profile_id=165"><em>Oliver</em> <span>Würffell</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/paul-butterworth.jpg" data-clip="https://player.vimeo.com/external/560247868.hd.mp4?s=7271ff170f592994478f9a2b89eaaf1a1cf740de&amp;profile_id=175"><em>Paul</em> <span>Butterworth</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/per-hampus-stalhandske.jpg" data-clip="https://player.vimeo.com/external/560214680.hd.mp4?s=ffa5e7a2bb96e7b2a28cfd096ed0bcb2e3c9e517&amp;profile_id=175"><em>Per-Hampus</em> <span>Stålhandske</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/scott-perry.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/1216262694/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&amp;log_user=0&amp;signature=bdb31d781db22dca1c39b769280294ab6c08e87ab07a28ea2fa87c9776e09557"><em>Scott</em> <span>Perry</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/trevor-clarence.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/748969140/rendition/720p/file.mp4?loc=external&amp;signature=002b1fca0cce138f490d2760823f75307154e366f1fba57716b727c6acb2f061"><em>Trevor</em> <span>Clarence</span></a>
+        <a class="do-name" href="#work" data-still="uploads/JOJX-stills/directors/zac-ella.jpg" data-clip="https://player.vimeo.com/progressive_redirect/playback/937915340/rendition/1080p/file.mp4?loc=external&amp;log_user=0&amp;signature=236eebd50777e566d4584b92152337b080768872334f751342e5e68135b17ba1"><em>Zac</em> <span>Ella</span></a>
+      </div>
+    </div>
+    <button class="do-shuffle" id="do-shuffle">Shuffle</button>
+    <button class="do-close" id="do-close" aria-label="Close">Close</button>
+  </div>
+  <div class="io" id="io" data-screen-label="Info">
+    <div class="io-inner" style="padding: 0; height: 900px; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; background: #000; color: #fff;">
+      <div class="io-now" id="io-now" style="position: relative; overflow: hidden;">
+        <img src="uploads/c4d214551729e2b5a6467f734ebbd09e.jpg" alt="" style="display: block; width: 100%; height: 100%; object-fit: cover;">
+        <div class="io-sky" id="io-sky" aria-hidden="true"></div>
+        <div class="cl" style="position: absolute; left: 60px; bottom: 48px; right: 60px; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #fff;"><span>Los Angeles, CA</span><span id="io-light" style="color: #fff;">—</span></div>
+          <div class="cl-t" style="font-size: 96px; color: #fff;"><span id="io-clock">—</span><small id="io-ampm" style="font-size: 14px;"></small></div>
+          <div class="cl-sky" style="background: rgba(255,255,255,.5);"><span class="cl-sun" id="io-sun" style="background: #fff;"></span></div>
+          <div class="cl-s" style="color: #fff; text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 300;"><span id="io-day">—</span></div>
+          <div style="font-family: 'EB Garamond', Georgia, serif; font-size: 20px; font-weight: 400; line-height: 1.3; color: #fff;"><span id="io-weather">—</span></div>
+        </div>
+      </div>
+      <div style="padding: 84px 60px 48px; display: flex; flex-direction: column; gap: 34px;">
+        <p style="margin: 0; font-family: 'EB Garamond', Georgia, serif; font-size: 22px; font-weight: 400; line-height: 1.32; text-wrap: pretty; color: #eee;">We represent award-winning directors and make films for brands. Small by choice. We like being close to the work.</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Team</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; align-content: start;">
+          <a class="io-row" href="mailto:jackson@jojx.co" style="--d: 0; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Jackson Morton</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">Executive Producer / Partner</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">jackson@jojx.co</span></a>
+          <a class="io-row" href="mailto:joe@jojx.co" style="--d: 1; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Joe Care</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">Executive Producer / Partner</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">joe@jojx.co</span></a>
+          <a class="io-row" href="mailto:sevasti@jojx.co" style="--d: 2; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Sevasti Buford</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">EP Sales / Partner</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">sevasti@jojx.co</span></a>
+          <a class="io-row" href="mailto:harry@jojx.co" style="--d: 3; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Harry Joseph</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">Executive Producer</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">harry@jojx.co</span></a>
+          <a class="io-row" href="mailto:tara@jojx.co" style="--d: 4; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Tara Spencer</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">CFO</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">tara@jojx.co</span></a>
+          <a class="io-row" href="mailto:mk@jojx.co" style="--d: 5; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Mary Katherine Wise</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">Production Manager</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">mk@jojx.co</span></a>
+          <a class="io-row" href="mailto:jenni@jojx.co" style="--d: 6; padding: 7px 0; border-top-color: #333;"><span class="io-nm" style="font-size: 13px;">Jenni Zeller</span><span style="font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #888;">Design Project Manager</span><span style="font-size: 10px; letter-spacing: .04em; color: #999;">jenni@jojx.co</span></a>
+          </div>
+        </div>
+        <div class="io-reps" style="position: relative; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Representation</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; align-content: start;">
+          <div class="io-terr" style="display: flex; flex-direction: column; min-width: 0; border-top: 1px solid #fff; padding-top: 8px;">
+            <span style="font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #888;">West</span>
+            <span style="font-family: 'EB Garamond', Georgia, serif; font-size: 16px; line-height: 1.2; margin: 2px 0 6px;">Red Rep</span>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:holly@redrep.tv">Holly Ross</a><a class="io-rt" href="tel:3236108888" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(323) 610-8888</a></div>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:vanessa@redrep.tv">Vanessa Mclean</a><a class="io-rt" href="tel:3108500019" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(310) 850-0019</a></div>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:jeremy@redrep.tv">Jeremy Hodges</a><a class="io-rt" href="tel:3109269722" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(310) 926-9722</a></div>
+          </div>
+          <div class="io-terr" style="display: flex; flex-direction: column; min-width: 0; border-top: 1px solid #fff; padding-top: 8px;">
+            <span style="font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #888;">Midwest</span>
+            <span style="font-family: 'EB Garamond', Georgia, serif; font-size: 16px; line-height: 1.2; margin: 2px 0 6px;">Wry Wit</span>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:sue@wrywit.tv">Sue Rosen</a><a class="io-rt" href="tel:3129527182" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(312) 952-7182</a></div>
+          </div>
+          <div class="io-terr" style="display: flex; flex-direction: column; min-width: 0; border-top: 1px solid #fff; padding-top: 8px;">
+            <span style="font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #888;">East</span>
+            <span style="font-family: 'EB Garamond', Georgia, serif; font-size: 16px; line-height: 1.2; margin: 2px 0 6px;">Barrie Isaacson</span>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:harry@barriei.com">Harry White</a><a class="io-rt" href="tel:2126271200" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(212) 627-1200</a></div>
+            <div style="display: flex; flex-direction: column; padding: 5px 0; border-top: 1px solid #333; font-size: 13px;"><a class="io-rl" href="mailto:barrie@barriei.com">Barrie Isaacson</a><a class="io-rt" href="tel:2126271200" style="font-size: 10px; letter-spacing: .04em; font-variant-numeric: tabular-nums;">(212) 627-1200</a></div>
+          </div>
+          </div>
+        </div>
+        <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #fff; padding-top: 12px;">
+            <div style="font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Contact</div>
+            <div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px;"><a class="io-cl" href="mailto:production@jojx.co?subject=Enquiry" target="_blank" rel="noopener" style="align-self: flex-start;">production@jojx.co</a><a class="io-cl" href="tel:+13232095025" target="_blank" rel="noopener" style="align-self: flex-start; font-variant-numeric: tabular-nums;">323 209 5025</a><a class="io-cl" href="https://www.instagram.com/jojx" target="_blank" rel="noopener" style="align-self: flex-start;">Instagram</a></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #fff; padding-top: 12px;">
+            <div style="font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase;">Office</div>
+            <a class="io-addr" href="https://goo.gl/maps/3gbm1TxeGbx3v9bn7" target="_blank" rel="noopener" style="align-self: flex-start; display: flex; flex-direction: column; align-items: flex-start; font-size: 13px; line-height: 1.5; color: #fff;"><span class="io-cl">920 Abbot Kinney Blvd</span><span class="io-cl">Venice, CA 90291</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="io-close" id="io-close" aria-label="Close">Close</button>
+  </div>
+  <div class="dp" id="dp" data-screen-label="Director">
+    <div class="dp-bar"><button class="dp-back" id="dp-back" aria-label="Back to all directors"><span class="dp-cue-tx">Back to all directors</span><span class="dp-cue-vec" aria-hidden="true"></span></button><button class="dp-close" id="dp-close" aria-label="Close">Close</button></div>
+    <div class="dp-hero"><video class="dp-reel" id="dp-reel" muted loop playsinline preload="none"></video><div class="dp-stack"><div class="dp-name" id="dp-name"></div><div class="dp-lead" id="dp-lead"></div></div><a class="dp-cue" id="dp-req" href="mailto:sevi@jojx.co" target="_blank" rel="noopener" aria-label="Request reel"><span class="dp-cue-tx">Request reel</span><span class="dp-cue-vec" aria-hidden="true"></span></a></div>
+    <div class="dp-work" id="dp-work"></div>
+    <div class="dp-body"><div><div class="dp-k">About</div><div class="dp-bio" id="dp-bio"></div><div class="dp-links" id="dp-links"></div></div></div>
+    <div class="dp-nav" id="dp-nav"></div>
+  </div>
+  <div class="nf" id="nf" data-screen-label="404">
+    <img src="uploads/JOJX-stills/work/porsche.jpg" alt="">
+    <div class="nf-in">
+      <div class="nf-code">404 · Frame not found</div>
+      <div class="nf-t"><em>This frame</em> doesn't exist.</div>
+      <button class="nf-back" id="nf-back">Back to work</button>
+    </div>
+  </div>
+  <div class="vo" id="vo">
+    <div class="vo-frame">
+      <span class="vo-line" id="vo-line"></span>
+      <div class="vo-embed"><video id="vo-video" playsinline preload="metadata" src="https://player.vimeo.com/external/459133237.hd.mp4?s=f300cd200bcc19b117605247a7946be4b05deda0&amp;profile_id=175"></video></div>
+      <div class="vo-bar">
+        <button class="vo-btn" id="vo-play" aria-label="Play">
+          <svg class="vo-i-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="vo-i-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z"/></svg>
+        </button>
+        <div class="vo-track" id="vo-track"><span class="vo-fill" id="vo-fill"></span></div>
+        <span class="vo-time" id="vo-time">0:00</span>
+        <button class="vo-btn" id="vo-mute" aria-label="Mute">
+          <svg class="vo-i-vol" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9.5h3.2L11 6v12L7.2 14.5H4zM14 8.6a4.6 4.6 0 0 1 0 6.8"stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M16.6 6.4a8 8 0 0 1 0 11.2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+          <svg class="vo-i-mute" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9.5h3.2L11 6v12L7.2 14.5H4z"/><path d="M15 9.5l5 5M20 9.5l-5 5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </button>
+        <span class="vo-meta" id="vo-meta"></span>
+      </div>
+    </div>
+    <button class="vo-close" id="vo-close" aria-label="Close">Close</button>
+  </div>
+    <div class="wm-sheet" id="wm-sheet"><a class="wnav" href="#work"><span>Directors</span></a><a class="wnav" href="#info"><span>Info</span></a></div>
+    <nav class="wmenu" id="wmenu" aria-label="Site">
+      <button class="wm-ic" id="wm-ic" aria-label="Menu"><span class="wm-a"></span><span class="wm-m"></span><span class="wm-b"></span></button>
+    </nav>
+    <div class="cur"><span class="cur-d"></span><span class="cur-l"></span></div>
+  </div>
+</section>
+
+
+
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  // CSS keyframes move the stills (so they drift even before JS runs); this loop only
+  // reads each still's live position and puts it into its wordmark mask, so the two
+  // can never fall out of phase.
+  renderVals() {
+    if (!this._started) { this._started = true; this.start(); }
+    return {};
+  }
+  componentDidMount() { if (!this._started) { this._started = true; this.start(); } if (!this._extras) { this._extras = true; this.loader(); this.notFound(); } }
+  loader() {
+    const t0 = Date.now(), seen = !!sessionStorage.getItem('jojx-ld');
+    sessionStorage.setItem('jojx-ld', '1');
+    const ease = (t) => t < .55 ? (t / .55) * .62 : .62 + ((t - .55) / .45) * .38;
+    const apply = () => { const ld = document.getElementById('ld'), st = document.querySelector('.wstage'); const el = Date.now() - t0;
+      const n = document.getElementById('ld-n'); if (n && !seen) { const p = Math.min(1, Math.max(0, (el - 250) / 1700)); n.textContent = String(Math.round(ease(p) * 100)).padStart(3, '0'); }
+      if (ld) { if (seen) { ld.style.transition = 'none'; ld.classList.add('is-done'); } else if (el > 200) ld.classList.add('is-done'); }
+      if (st && (seen || el > 1700)) st.classList.remove('is-loading');
+      if (el < 6000) setTimeout(apply, 40); };
+    apply();
+  }
+  directorPage() {
+    const go = async () => {
+      const dp = document.getElementById('dp'); if (!dp) { setTimeout(go, 120); return; }
+      if (dp.__w) return; dp.__w = true;
+      const mod = await import('./directors-data.js'); const D = mod.DIRECTORS, ORDER = mod.ORDER;
+      const reel = document.getElementById('dp-reel'), nm = document.getElementById('dp-name'), ld = document.getElementById('dp-lead'), bio = document.getElementById('dp-bio'), links = document.getElementById('dp-links'), work = document.getElementById('dp-work'), nav = document.getElementById('dp-nav');
+      const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      // long names (Per-Hampus Stålhandske, Paul Butterworth) would run under the lead
+      // paragraph, so the display size is fitted to the width actually left over
+      const MAXN = 120, MINN = 54;
+      let fontsFitted = false;
+      const fitName = (hasLead) => {
+        const heroEl = dp.querySelector('.dp-hero');
+        if (!heroEl || !nm.firstChild) return;
+        nm.style.fontSize = MAXN + 'px';
+        const avail = heroEl.clientWidth - 120;
+        const need = nm.scrollWidth;
+        if (need > avail && avail > 0) nm.style.fontSize = Math.max(MINN, Math.floor(MAXN * avail / need)) + 'px';
+        if (!fontsFitted && document.fonts && document.fonts.ready) {
+          fontsFitted = true;
+          document.fonts.ready.then(() => fitName(hasLead));
+        }
+      };
+      this._fitDirName = fitName;
+      // request-reel cue: the label and vector lean toward the cursor, spring back on exit
+      [document.getElementById('dp-req'), document.getElementById('dp-back')].forEach((cue) => {
+        const tx = cue.querySelector('.dp-cue-tx'), vec = cue.querySelector('.dp-cue-vec');
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        cue.addEventListener('pointermove', e => {
+          const r = cue.getBoundingClientRect(), dx = e.clientX - r.left - r.width / 2, dy = e.clientY - r.top - r.height / 2;
+          cue.classList.remove('rel');
+          vec.style.setProperty('--vx', dx * .3 + 'px'); vec.style.setProperty('--vy', dy * .4 + 'px');
+          tx.style.setProperty('--mx', dx * .18 + 'px'); tx.style.setProperty('--my', dy * .26 + 'px');
+        });
+        cue.addEventListener('pointerleave', () => { cue.classList.add('rel'); ['--vx', '--vy'].forEach(p => vec.style.removeProperty(p)); ['--mx', '--my'].forEach(p => tx.style.removeProperty(p)); });
+      });
+      addEventListener('resize', () => { const s = dp.dataset.slug; if (s && D[s]) fitName(!!D[s].lead); });
+      const render = (slug) => {
+        const d = D[slug]; if (!d) return;
+        dp.dataset.slug = slug;
+        dp.scrollTop = 0;
+        reel.muted = true; reel.volume = 0; reel.defaultMuted = true; reel.setAttribute('src', d.reel || ''); reel.currentTime = 0; reel.play().catch(() => {});
+        nm.innerHTML = (d.first ? '<em>' + esc(d.first) + '</em>' : '') + '<span>' + esc(d.last) + '</span>';
+        ld.textContent = d.lead || ''; bio.textContent = d.bio || (d.lead ? '' : 'Reel and selected work.');
+        fitName(!!d.lead);
+        const rq = document.getElementById('dp-req');
+        const full = [d.first, d.last].filter(Boolean).join(' ');
+        // bio sets itself one word at a time, so the copy reads as it arrives
+        const body = dp.querySelector('.dp-body');
+        body.classList.remove('is-in');
+        if (d.bio || d.lead) {
+          const words = (bio.textContent || '').split(/\s+/).filter(Boolean);
+          bio.textContent = '';
+          words.forEach((w, i) => {
+            const s = document.createElement('span');
+            s.className = 'dp-bio-w'; s.textContent = w;
+            s.style.transitionDelay = Math.min(i * 14, 900) + 'ms';
+            bio.append(s, document.createTextNode(' '));
+          });
+        }
+        if (!this._bioObs) {
+          this._bioObs = new IntersectionObserver((es) => es.forEach((en) => {
+            if (en.isIntersecting) en.target.classList.add('is-in');
+          }), { root: dp, rootMargin: '0px 0px -15% 0px' });
+          this._bioObs.observe(body);
+        }
+        rq.href = 'mailto:sevi@jojx.co?subject=' + encodeURIComponent('Requesting a reel for ' + full);
+        links.innerHTML = (d.siteUrl ? '<a href="' + d.siteUrl + '" target="_blank" rel="noopener">' + esc(d.site) + '</a>' : '') + (d.igUrl ? '<a href="' + d.igUrl + '" target="_blank" rel="noopener">' + esc(d.ig) + '</a>' : '');
+        // no still on file: pull a frame out of the clip itself so the tile is never blank.
+        // #t=0.6 makes the browser paint that frame off metadata alone, no playback.
+        work.innerHTML = (d.work || []).map((w, i) => {
+          const frame = !w.still && w.clip;
+          const vid = w.clip
+            ? (frame
+              ? '<video class="fr" muted loop playsinline preload="metadata" data-frame="' + w.clip + '#t=0.6" data-src="' + w.clip + '"></video>'
+              : '<video muted loop playsinline preload="none" data-src="' + w.clip + '"></video>')
+            : '';
+          return '<a class="dp-sp' + (w.clip ? ' has-v' : '') + (frame ? ' is-frame' : '') + '" href="#work" data-i="' + i + '"><span class="sh">'
+            + (w.still ? '<img src="' + w.still + '" alt="' + esc(w.client) + '">' : '')
+            + vid + '</span><span class="cl">' + esc(w.client) + '</span>'
+            + (w.title ? '<span class="ti">' + esc(w.title) + '</span>' : '') + '</a>';
+        }).join('');
+        const sps = [...work.querySelectorAll('.dp-sp')];
+        sps.forEach((a, i) => { a.dataset.speed = (0.03 + (i % 3) * 0.025).toFixed(3); a.classList.add('is-unseen'); });
+        // the dp-rooted observer both reveals the tile and pulls the poster frame in —
+        // native lazy loading doesn't fire inside this nested, clip-path-hidden scroller
+        const seen = new IntersectionObserver((es) => es.forEach((en) => {
+          if (!en.isIntersecting) return;
+          en.target.classList.remove('is-unseen');
+          const fv = en.target.querySelector('video.fr');
+          if (fv && !fv.getAttribute('src')) fv.setAttribute('src', fv.dataset.frame);
+          seen.unobserve(en.target);
+        }), { root: dp, threshold: .12, rootMargin: '600px 0px' });
+        sps.forEach((a) => seen.observe(a));
+        let raf = 0, lastY = dp.scrollTop, vel = 0;
+        const px = () => { raf = 0; const y = dp.scrollTop; vel += ((y - lastY) - vel) * .2; lastY = y; const H = dp.clientHeight;
+          sps.forEach((a) => { const r = a.getBoundingClientRect(); const c = r.top + r.height / 2 - H / 2; const k = parseFloat(a.dataset.speed); const sk = Math.max(-3.2, Math.min(3.2, vel * .05 * (.6 + k * 4)));
+            a.style.transform = 'translate3d(0,' + (-c * k).toFixed(1) + 'px,0) skewY(' + sk.toFixed(2) + 'deg)'; });
+          if (Math.abs(vel) > .1) raf = requestAnimationFrame(px); };
+        dp.onscroll = () => { if (!raf) raf = requestAnimationFrame(px); }; px();
+        sps.forEach((a) => {
+          const w = d.work[+a.dataset.i], vv = a.querySelector('video');
+          if (vv) { vv.muted = true; vv.volume = 0; vv.defaultMuted = true; a.addEventListener('mouseenter', () => { vv.muted = true; vv.volume = 0; if (!vv.getAttribute('src')) vv.setAttribute('src', vv.dataset.src); vv.play().catch(() => {}); }); a.addEventListener('mouseleave', () => vv.pause()); }
+          a.addEventListener('click', (e) => { e.preventDefault(); const img = a.querySelector('img'); this._openFilm && this._openFilm(w.client, d.name, a.querySelector('.sh').getBoundingClientRect(), img ? img.getAttribute('src') : (d.still || ''), w.clip || d.reel, w.embed || w.filmUrl || (function(u){ const m = /playback\/(\d+)\//.exec(u || '') || /vimeo\.com\/(?:external\/)?(\d+)/.exec(u || ''); return m ? 'https://player.vimeo.com/video/' + m[1] : ''; })(w.clip)); });
+        });
+        const i = ORDER.indexOf(slug), prev = D[ORDER[(i - 1 + ORDER.length) % ORDER.length]], next = D[ORDER[(i + 1) % ORDER.length]];
+        const lab = (x) => '<span class="dp-lean">' + (x.first ? '<em>' + esc(x.first) + '</em> ' : '') + '<span>' + esc(x.last) + '</span></span>';
+        nav.innerHTML = '<a href="#directors" data-slug="' + ORDER[(i - 1 + ORDER.length) % ORDER.length] + '"><small>Previous</small>' + lab(prev) + '</a><a href="#directors" data-slug="' + ORDER[(i + 1) % ORDER.length] + '" style="text-align: right;"><small>Next</small>' + lab(next) + '</a>';
+        nav.querySelectorAll('a').forEach((a) => {
+          a.addEventListener('click', (e) => { e.preventDefault(); render(a.dataset.slug); });
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          const ln = a.querySelector('.dp-lean');
+          a.addEventListener('pointermove', (e) => {
+            const r = a.getBoundingClientRect();
+            a.classList.remove('rel');
+            ln.style.setProperty('--mx', (e.clientX - r.left - r.width / 2) * .18 + 'px');
+            ln.style.setProperty('--my', (e.clientY - r.top - r.height / 2) * .26 + 'px');
+          });
+          a.addEventListener('pointerleave', () => { a.classList.add('rel'); ln.style.removeProperty('--mx'); ln.style.removeProperty('--my'); });
+        });
+      };
+      const hero = dp.querySelector('.dp-hero');
+      const canVT = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // morph the tapped source still into the director hero; fall back to the clip-path curtain
+      const vt = (mutate, src) => {
+        if (!canVT()) { mutate(); return; }
+        if (src) src.style.viewTransitionName = 'dp-morph';
+        if (hero) hero.style.viewTransitionName = 'dp-morph';
+        dp.classList.add('is-vt');
+        const t = document.startViewTransition(() => { mutate(); });
+        const cleanup = () => { if (src) src.style.viewTransitionName = ''; if (hero) hero.style.viewTransitionName = ''; dp.classList.remove('is-vt'); };
+        t.finished.then(cleanup, cleanup);
+      };
+      const open = (slug, src) => {
+        vt(() => { render(slug); dp.classList.add('is-open'); }, src);
+        this.ovOpen('dp', dp, close);
+        setTimeout(() => { reel.muted = true; reel.play().catch(() => {}); }, 400);
+      };
+      const close = (silent) => { vt(() => dp.classList.remove('is-open')); reel.pause(); if (!silent) this.ovClosed('dp'); };
+      this._openDirector = open;
+      { const hero = dp.querySelector('.dp-hero'), cur = dp.closest('.wstage') && dp.closest('.wstage').querySelector('.cur');
+        if (cur) { const upd = (e) => { const r = hero.getBoundingClientRect(); cur.classList.toggle('is-hero', e.clientY >= r.top && e.clientY <= r.bottom); }; dp.addEventListener('mousemove', upd); dp.addEventListener('scroll', () => { const r = hero.getBoundingClientRect(); if (r.bottom < 0) cur.classList.remove('is-hero'); }); } }
+      document.getElementById('dp-close').addEventListener('click', () => close());
+      document.getElementById('dp-back').addEventListener('click', () => { close(true); this._openDirectors && this._openDirectors(); });
+      const slugOf = (a) => (a.dataset.still || '').split('/').pop().replace(/\.jpg$/, '');
+      document.querySelectorAll('.do-name').forEach((a) => { a.addEventListener('click', (e) => { e.preventDefault(); const s = slugOf(a); if (!D[s]) return; const st = document.getElementById('do-still'); open(s, st && st.classList.contains('is-on') ? st : null); }); a.dataset.cursor = 'view'; });
+    };
+    go();
+  }
+  notFound() {
+    const go = () => { const nf = document.getElementById('nf'), b = document.getElementById('nf-back'); if (!nf || !b) { setTimeout(go, 100); return; }
+      const open = () => { nf.classList.add('is-open'); this.ovOpen && this.ovOpen('nf', nf, close); };
+      const close = (silent) => { nf.classList.remove('is-open'); if (!silent) this.ovClosed && this.ovClosed('nf'); history.replaceState(null, '', location.pathname); };
+      b.addEventListener('click', () => close());
+      const check = () => { const hsh = location.hash.replace('#', ''); if (hsh && !['work', 'info', 'directors', ''].includes(hsh) && !document.getElementById(hsh)) open(); };
+      window.addEventListener('hashchange', check); check(); };
+    go();
+  }
+  componentWillUnmount() { this._dead = true; cancelAnimationFrame(this._raf); cancelAnimationFrame(this._pullRaf); }
+  start() {
+    const MARK_X = 60, MARK_Y = 250;
+    const sync = () => {
+      if (this._dead) return;
+      const photos = document.querySelectorAll('.mq');
+      const masks = document.querySelectorAll('img[src*="jojx-white"]');
+      if (photos.length && photos.length === masks.length) {
+        const black = document.querySelector('img[src*="jojx-black"]');
+        const base = black ? black.getBoundingClientRect() : null;
+        for (let i = 0; i < photos.length; i++) {
+          const r = photos[i].getBoundingClientRect();
+          if (!base || !r.width) continue;
+          const x = r.x - base.x + MARK_X;
+          const y = r.y - base.y + MARK_Y;
+          const mp = (x - MARK_X).toFixed(1) + 'px ' + (y - MARK_Y).toFixed(1) + 'px';
+          masks[i].style.maskPosition = mp;
+          masks[i].style.webkitMaskPosition = mp;
+        }
+      }
+      this._raf = requestAnimationFrame(sync);
+    };
+    sync();
+    setTimeout(sync, 0);
+    this.workParallax();
+  }
+  workParallax() {
+    const attach = () => {
+      const view = document.querySelector('.wview');
+      if (!view) { setTimeout(attach, 120); return; }
+      if (view.__px) return;
+
+      view.__px = true;
+      const plates = [...view.querySelectorAll('[data-speed]')];
+      const black = view.querySelector('.wmark-b');
+      const mag = plates.map(() => ({ x: 0, y: 0 }));  // cursor pull per frame
+      let cursor = null;
+      let lastT = view.scrollTop, tVel = 0, sVel = 0;
+      let sTarget = view.scrollTop, sPos = view.scrollTop, lerping = false;
+
+      // split client names into per-letter spans for the hover stagger
+      view.querySelectorAll('.wp-client').forEach((el) => {
+        if (el.dataset.split) return;
+        el.dataset.split = '1';
+        const txt = el.textContent;
+        el.textContent = '';
+        [...txt].forEach((ch, i) => {
+          const s = document.createElement('i');
+          s.textContent = ch === ' ' ? '\u00a0' : ch;
+          s.style.setProperty('--i', i);
+          el.appendChild(s);
+        });
+      });
+      // shrink long client names so the whole title fits the still
+      const fitNames = () => view.querySelectorAll('.wp-client').forEach((el) => {
+        el.style.fontSize = '';
+        const avail = el.clientWidth, need = el.scrollWidth;
+        if (need > avail && avail > 0) el.style.fontSize = Math.max(26, Math.floor(54 * avail / need)) + 'px';
+      });
+      fitNames();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNames);
+
+      // reveal + film-gate wipe run on the compositor where scroll-driven animations exist;
+      // only fall back to the observer/rAF version when they don't
+      const NATIVE_TL = CSS.supports('animation-timeline: view()');
+      const wps = [...view.querySelectorAll('.wp')];
+      if (!NATIVE_TL) {
+        wps.forEach((p) => { if (p.getBoundingClientRect().top - view.getBoundingClientRect().top > view.clientHeight) p.classList.add('is-unseen'); });
+        const seen = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.remove('is-unseen'); seen.unobserve(en.target); } }), { root: view, threshold: .12 });
+        wps.forEach((p) => seen.observe(p));
+      }
+      const apply = () => {
+        const t = view.scrollTop;
+        const p = Math.max(0, Math.min(1, t / 700));   // header -> work transition
+        if (black) black.style.transform = 'scale(' + (1 - .51 * p).toFixed(4) + ')';
+        if (black && black.parentElement) black.parentElement.classList.toggle('is-back', t > 40);
+        const vr = view.getBoundingClientRect();
+        plates.forEach((el, i) => {
+          const k = parseFloat(el.dataset.speed) || 0;
+          const m = mag[i];
+          const sk = sVel * .05 * (.6 + k * 4);
+          el.style.transform = 'translate3d(' + m.x.toFixed(1) + 'px,' + (-t * k + m.y).toFixed(1) + 'px,0) skewY(' + Math.max(-3.2, Math.min(3.2, sk)).toFixed(2) + 'deg)';
+          const vert = el.querySelector('.wp-vert');
+          if (vert) vert.style.translate = '0 ' + (t * k * .18).toFixed(1) + 'px';
+          const shot = el.querySelector('.wp-shot');
+          if (!shot || NATIVE_TL) return;
+          // film-gate wipe: reveal over the last 260px of the frame's approach
+          const r = el.getBoundingClientRect();
+          const eIn = Math.min(1, Math.max(0, (vr.bottom - r.top) / 260));
+          const eOut = Math.min(1, Math.max(0, (r.bottom - vr.top) / 260));
+          if (eIn >= 1 && eOut >= 1) { shot.style.clipPath = ''; el.style.opacity = ''; }
+          else {
+            shot.style.clipPath = 'inset(' + ((1 - eOut) * 100).toFixed(1) + '% 0 ' + ((1 - eIn) * 100).toFixed(1) + '% 0)';
+            el.style.opacity = (.12 + .88 * Math.min(eIn, eOut)).toFixed(3);
+          }
+        });
+      };
+
+      const pull = () => {
+        if (this._dead) { return; }
+        if (lerping) {
+          const max = view.scrollHeight - view.clientHeight;
+          sTarget = Math.max(0, Math.min(max, sTarget));
+          sPos += (sTarget - sPos) * .092;
+          if (Math.abs(sTarget - sPos) < .4) { sPos = sTarget; lerping = false; }
+          view.scrollTop = sPos;
+        }
+        sVel += (tVel - sVel) * .14;
+        tVel *= .86;
+        const moving = Math.abs(sVel) > .015;
+        if (moving && !cursor) apply();
+        if (cursor) {
+          const vr = view.getBoundingClientRect();
+          plates.forEach((el, i) => {
+            const r = el.getBoundingClientRect();
+            const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            const dx = cursor.x - cx, dy = cursor.y - cy;
+            const d = Math.hypot(dx, dy);
+            const reach = 420;
+            const f = d < reach ? 4 + (1 - d / reach) * 2 : 0;   // 4–6px of nudge
+            const tx = d ? (dx / d) * f : 0, ty = d ? (dy / d) * f : 0;
+            mag[i].x += (tx - mag[i].x) * .08;
+            mag[i].y += (ty - mag[i].y) * .08;
+          });
+          apply();
+        }
+        this._pullRaf = requestAnimationFrame(pull);
+      };
+
+      view.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) return;
+        e.preventDefault();
+        if (!lerping) { sPos = view.scrollTop; sTarget = sPos; }
+        sTarget += e.deltaY * (e.deltaMode === 1 ? 18 : 1);
+        lerping = true;
+      }, { passive: false });
+      view.addEventListener('scroll', () => {
+        const t = view.scrollTop;
+        if (!lerping) { sPos = t; sTarget = t; }
+        tVel = Math.max(-70, Math.min(70, t - lastT));
+        lastT = t;
+        apply();
+      }, { passive: true });
+      view.addEventListener('mousemove', (e) => { cursor = { x: e.clientX, y: e.clientY }; }, { passive: true });
+      view.addEventListener('mouseleave', () => { cursor = { x: -9999, y: -9999 }; });
+
+      // custom cursor + magnetic nav
+      const stage = view.closest('.wstage');
+      const cur = stage.querySelector('.cur');
+      const lbl = cur.querySelector('.cur-l');
+      const dot = cur.querySelector('.cur-d');
+      let cx = 0, cy = 0, tx = 0, ty = 0, lx = 0, ly = 0, cvx = 0, cvy = 0, curOn = false;
+      const curTick = () => {
+        cvx += (tx - cx) * .38; cvy += (ty - cy) * .38; cvx *= .55; cvy *= .55;
+        cx += cvx; cy += cvy;
+        lx += (tx - lx) * .16; ly += (ty - ly) * .16;
+        const sp = Math.hypot(cvx, cvy);
+        const st = 1 + Math.min(1.6, sp * .06), sq = 1 / Math.sqrt(st);
+        const ang = Math.atan2(cvy, cvx) * 180 / Math.PI;
+        dot.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px) rotate(' + ang.toFixed(1) + 'deg) scale(' + st.toFixed(3) + ',' + sq.toFixed(3) + ')';
+        lbl.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ly.toFixed(1) + 'px)' + (cur.classList.contains('has-l') ? '' : ' translateX(-6px)');
+        requestAnimationFrame(curTick);
+      };
+      requestAnimationFrame(curTick);
+      const LABELS = { play: 'Play', close: 'Close', down: 'Scroll', top: 'Top', view: 'View' };
+      view.querySelectorAll('.wp').forEach((p) => { p.dataset.cursor = 'play'; });
+      stage.querySelectorAll('.vo-close, .io-close, .do-close, .do-name').forEach((b) => { b.dataset.cursor = b.classList.contains('do-name') ? 'view' : 'close'; });
+      const navs = [...stage.querySelectorAll('.wnav')];
+      const sheet = document.getElementById('wm-sheet'), menuEl = document.getElementById('wmenu'), icBtn = document.getElementById('wm-ic');
+      const setSheet = (on) => { sheet && sheet.classList.toggle('is-open', on); menuEl && menuEl.classList.toggle('is-open', on); };
+      this._setSheet = setSheet;
+      if (icBtn && !icBtn.__w) { icBtn.__w = true; icBtn.addEventListener('click', () => { const openOv = stage.querySelector('.do.is-open, .io.is-open, .vo.is-open, .nf.is-open'); if (openOv && !sheet.classList.contains('is-open')) { this._closeAll && this._closeAll(); return; } setSheet(!sheet.classList.contains('is-open')); }); }
+      navs.forEach((n) => n.addEventListener('click', () => setSheet(false)));
+      stage.addEventListener('mousemove', (e) => {
+        const r = stage.getBoundingClientRect();
+        const s = r.width / 1440 || 1;
+        const x = (e.clientX - r.left) / s, y = (e.clientY - r.top) / s;
+        tx = x; ty = y;
+        if (!curOn) { cx = lx = x; cy = ly = y; curOn = true; }
+        cur.style.opacity = '1';
+        const tgt = e.target && e.target.closest ? e.target.closest('[data-cursor]') : null;
+        const m = tgt ? tgt.dataset.cursor : '';
+        if ((cur.dataset.mode || '') !== m) { if (m) cur.dataset.mode = m; else delete cur.dataset.mode; if (LABELS[m]) lbl.textContent = LABELS[m]; cur.classList.toggle('has-l', !!m); }
+      }, { passive: true });
+      stage.addEventListener('mouseleave', () => { cur.style.opacity = '0'; });
+
+      // director-name scramble on tile hover
+      const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ/—·';
+      view.querySelectorAll('.wp').forEach((p) => {
+        const v = p.querySelector('.wp-vert');
+        if (!v) return;
+        const real = v.textContent;
+        let raf = 0;
+        p.addEventListener('mouseenter', () => {
+          cancelAnimationFrame(raf);
+          const t0 = performance.now(), D = 460;
+          const tick = (now) => {
+            const pr = Math.min(1, (now - t0) / D);
+            let out = '';
+            for (let i = 0; i < real.length; i++) {
+              const ch = real[i];
+              if (ch === ' ' || ch === '-') { out += ch; continue; }
+              out += (i / real.length < pr) ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+            }
+            v.textContent = out;
+            if (pr < 1) raf = requestAnimationFrame(tick); else v.textContent = real;
+          };
+          raf = requestAnimationFrame(tick);
+        });
+      });
+      apply();
+      pull();
+    };
+    attach();
+    // overlay curtain manager: the open overlay slides off-axis while the next enters
+    this._ov = { current: null, els: {}, closers: {} };
+    this.ovOpen = (name, el, closer) => {
+      const o = this._ov;
+      o.els[name] = el; o.closers[name] = closer;
+      const cur = o.current;
+      if (cur && cur !== name && o.els[cur]) {
+        const ex = o.els[cur], exClose = o.closers[cur];
+        ex.classList.add('is-exit');
+        setTimeout(() => {
+          ex.classList.add('is-reset');
+          ex.classList.remove('is-exit');
+          exClose && exClose(true);
+          requestAnimationFrame(() => requestAnimationFrame(() => ex.classList.remove('is-reset')));
+        }, 1080);
+      }
+      o.current = name;
+    };
+    this.ovClosed = (name) => { if (this._ov.current === name) this._ov.current = null; };
+    this._closeAll = () => { const o = this._ov; if (o.current && o.closers[o.current]) o.closers[o.current](); };
+    this.videoOverlay();
+    this.infoOverlay();
+    this.directorPage();
+    this.dpMagnet();
+    this.directorsOverlay();
+  }
+
+  dpMagnet() {
+    const attach = () => {
+      const dp = document.getElementById('dp');
+      if (!dp) { setTimeout(attach, 150); return; }
+      if (dp.__mag) { return; }
+      dp.__mag = true;
+      const hush = () => dp.querySelectorAll('video').forEach((v) => { v.muted = true; v.defaultMuted = true; v.volume = 0; v.setAttribute('muted', ''); });
+      hush();
+      dp.addEventListener('play', hush, true);
+      dp.addEventListener('volumechange', (e) => { const v = e.target; if (v && !v.muted) { v.muted = true; v.volume = 0; } }, true);
+      dp.addEventListener('mouseover', hush, { passive: true });
+      let cur = null;
+      const mag = new WeakMap();
+      dp.addEventListener('mousemove', (e) => { cur = { x: e.clientX, y: e.clientY }; }, { passive: true });
+      dp.addEventListener('mouseleave', () => { cur = null; });
+      const tick = () => {
+        if (this._dead) { return; }
+        const tiles = dp.querySelectorAll('.dp-sp');
+        const hov = dp.querySelector('.dp-sp:hover');
+        let hr = null;
+        if (hov) { const b = hov.getBoundingClientRect(); hr = { x: b.left + b.width / 2, y: b.top + b.height / 2, w: b.width, h: b.height }; }
+        tiles.forEach((el) => {
+          let m = mag.get(el);
+          if (!m) { m = { x: 0, y: 0 }; mag.set(el, m); }
+          let tx = 0, ty = 0;
+          if (hr && el !== hov) {
+            // clear a berth around the hovered tile: neighbours slide directly away from it
+            const r = el.getBoundingClientRect();
+            const dx = (r.left + r.width / 2) - hr.x, dy = (r.top + r.height / 2) - hr.y;
+            const d = Math.hypot(dx, dy) || 1;
+            const reach = (hr.w + r.width) * .62;
+            const f = d < reach ? 50 * (1 - d / reach) : 0;
+            tx = (dx / d) * f; ty = (dy / d) * f;
+          } else if (hov) {
+            tx = 0; ty = 0;
+          } else if (cur) {
+            const r = el.getBoundingClientRect();
+            const dx = cur.x - (r.left + r.width / 2), dy = cur.y - (r.top + r.height / 2);
+            const d = Math.hypot(dx, dy), reach = 420;
+            const f = d < reach ? 4 + (1 - d / reach) * 2 : 0;
+            if (d) { tx = (dx / d) * f; ty = (dy / d) * f; }
+          }
+          const ease = hr ? .12 : .08;
+          m.x += (tx - m.x) * ease;
+          m.y += (ty - m.y) * ease;
+          if (Math.abs(m.x) < .05 && Math.abs(m.y) < .05) { el.style.translate = ''; return; }
+          el.style.translate = m.x.toFixed(1) + 'px ' + m.y.toFixed(1) + 'px';
+        });
+        this._dpMagRaf = requestAnimationFrame(tick);
+      };
+      tick();
+    };
+    attach();
+  }
+
+  directorsOverlay() {
+    const attach = () => {
+      const dov = document.getElementById('do');
+      if (!dov) { setTimeout(attach, 120); return; }
+      if (dov.__wired) { return; }
+      dov.__wired = true;
+      const still = document.getElementById('do-still');
+      const stage = dov.closest('.wstage');
+      const names = [...dov.querySelectorAll('.do-name')];
+      const open = () => { dov.classList.add('is-open'); stage && stage.classList.add('is-dark'); this._scatterDirectors && this._scatterDirectors(); this.ovOpen('do', dov, close); };
+      const close = (silent) => { dov.classList.remove('is-open'); stage && stage.classList.remove('is-dark'); still.classList.remove('is-on'); still.pause(); if (!silent) this.ovClosed('do'); };
+      this._openDirectors = open;
+      document.querySelectorAll('.wnav').forEach((n) => {
+        if (n.textContent.trim().toLowerCase() !== 'directors') { return; }
+        n.addEventListener('click', (e) => { e.preventDefault(); open(); });
+      });
+      const alt = document.getElementById('io-directors');
+      if (alt) alt.addEventListener('click', open);
+      const VECTORS = [
+        ['-38%', '14%', '.78', '-4deg'],
+        ['34%', '18%', '.84', '3deg'],
+        ['0%', '-42%', '.8', '-2deg'],
+        ['42%', '-16%', '.76', '5deg'],
+        ['-30%', '-30%', '.86', '2deg'],
+        ['0%', '46%', '.74', '0deg'],
+        ['-46%', '-6%', '.82', '6deg'],
+        ['26%', '34%', '.79', '-6deg'],
+        ['-18%', '38%', '.88', '4deg'],
+        ['46%', '4%', '.75', '-3deg'],
+        ['-40%', '24%', '.83', '1deg'],
+        ['12%', '-44%', '.81', '-5deg'],
+        ['-8%', '42%', '.85', '3deg'],
+        ['38%', '-32%', '.77', '-2deg'],
+        ['-34%', '-24%', '.87', '5deg'],
+      ];
+      const showClip = (a, i) => {
+          const nr = a.getBoundingClientRect(), sr = still.getBoundingClientRect();
+          const sw = sr.width || 1, sh = sr.height || 1;
+          const dx = ((nr.left + nr.width / 2) - (sr.left + sr.width / 2)) / sw * 100, dy = ((nr.top + nr.height / 2) - (sr.top + sr.height / 2)) / sh * 100;
+          const v = [dx.toFixed(1) + '%', dy.toFixed(1) + '%', '.22', VECTORS[i % VECTORS.length][3]];
+          // snap back to the entry pose with transitions off, then re-enable so it replays every hover
+          still.style.transition = 'none';
+          still.classList.remove('is-on');
+          still.style.setProperty('--dx', v[0]);
+          still.style.setProperty('--dy', v[1]);
+          still.style.setProperty('--ds', v[2]);
+          still.style.setProperty('--dr', v[3]);
+          still.poster = a.dataset.still;
+          still.muted = true; still.volume = 0;
+          if (still.getAttribute('src') !== a.dataset.clip) {
+            still.setAttribute('src', a.dataset.clip);
+          }
+          void still.offsetWidth;
+          requestAnimationFrame(() => {
+            still.style.transition = '';
+            still.classList.add('is-on');
+            still.muted = true;
+            still.currentTime = 0;
+            still.play().catch(() => {});
+          });
+      };
+      const W = 1440, H = 900, cols = 3, rows = 5;
+      const scatter = () => {
+        const cells = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push([c, r]);
+        cells.sort(() => Math.random() - .5);
+        names.forEach((a, i) => { const [c, r] = cells[i % cells.length]; const cw = (W - 120) / cols, rh = (H - 200) / rows;
+          const x = 60 + c * cw + 20 + Math.random() * Math.max(0, cw - 40 - a.offsetWidth), y = 110 + r * rh + Math.random() * Math.max(0, rh - 60);
+          a.style.left = Math.round(x) + 'px'; a.style.top = Math.round(y) + 'px'; a.style.animationDelay = (-Math.random() * 12) + 's'; });
+      };
+      const sh = document.getElementById('do-shuffle'); sh && sh.addEventListener('click', scatter);
+      this._scatterDirectors = scatter;
+      names.forEach((a, i) => {
+        a.addEventListener('mouseenter', () => showClip(a, i));
+      });
+      dov.querySelector('.do-list').addEventListener('mouseleave', () => { still.classList.remove('is-on'); still.pause(); });
+      document.getElementById('do-close').addEventListener('click', () => close());
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); } });
+    };
+    attach();
+  }
+
+  infoOverlay() {
+    const attach = () => {
+      const io = document.getElementById('io');
+      if (!io) { setTimeout(attach, 120); return; }
+      if (io.__wired) { return; }
+      io.__wired = true;
+      const open = () => { io.classList.add('is-open'); io.scrollTop = 0; this.ovOpen('io', io, close); this._typeInfo && this._typeInfo(); };
+      const close = (silent) => { io.classList.remove('is-open'); if (!silent) this.ovClosed('io'); };
+      document.querySelectorAll('.wnav').forEach((n) => {
+        if (n.textContent.trim().toLowerCase() !== 'info') { return; }
+        n.addEventListener('click', (e) => { e.preventDefault(); open(); });
+      });
+      const alt = document.getElementById('do-info');
+      if (alt) alt.addEventListener('click', open);
+      document.getElementById('io-close').addEventListener('click', () => close());
+      io.querySelectorAll('.io-row').forEach((r, i) => { r.style.setProperty('--d', i); delete r.dataset.cursor; });
+      io.querySelectorAll('[data-cursor]').forEach((el) => { delete el.dataset.cursor; });
+      io.querySelectorAll('a[href^="mailto:"], a[href^="tel:"]').forEach((a) => { a.style.pointerEvents = 'auto'; a.addEventListener('click', (e) => { e.stopPropagation(); window.location.href = a.getAttribute('href'); }); });
+      const tick = () => {
+        const clock = document.getElementById('io-clock'), ampm = document.getElementById('io-ampm'), day = document.getElementById('io-day'), light = document.getElementById('io-light'), sun = document.getElementById('io-sun');
+        const now = new Date(), tz = 'America/Los_Angeles';
+        const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, weekday: 'long', month: 'long', day: 'numeric', timeZone: tz }).formatToParts(now).map((p) => [p.type, p.value]));
+        if (clock) clock.textContent = parts.hour + ':' + parts.minute;
+        if (ampm) ampm.textContent = parts.dayPeriod;
+        if (day) day.textContent = parts.weekday + ' ' + parts.month + ' ' + parts.day;
+        const h24 = +new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz }).format(now) % 24 + (+parts.minute) / 60;
+        if (sun) sun.style.setProperty('--sun', (h24 / 24 * 100).toFixed(2) + '%');
+        this._setSky && this._setSky(h24);
+        if (light) light.textContent = h24 < 6 ? 'Night' : h24 < 8 ? 'Golden hour' : h24 < 17 ? 'Daylight' : h24 < 19.5 ? 'Golden hour' : h24 < 21 ? 'Blue hour' : 'Night';
+      };
+      tick(); setInterval(tick, 15000);
+      const phrase = (hi, lo, code, rainPct) => {
+        const wet = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(code);
+        const drizzle = [51,53,55,56,57,61,80].includes(code);
+        const snow = [71,73,75,77,85,86].includes(code);
+        const cloud = [3,45,48].includes(code);
+        const part = [1,2].includes(code);
+        const f = Math.round(hi), l = Math.round(lo);
+        let s;
+        if (snow) s = 'Snow in Venice, which never happens';
+        else if (wet) s = drizzle ? 'Today it is looking like rain' : 'Heavy rain rolling through today';
+        else if (cloud) s = 'Grey and flat overhead today';
+        else if (part) s = f >= 78 ? 'Warm today, sun through high cloud' : 'Mild today, sun through high cloud';
+        else s = f >= 85 ? 'Hot and clear today' : f >= 74 ? 'Today it will be warm and clear' : f >= 62 ? 'Clear and mild today' : 'Clear but cool today';
+        return s + ' — ' + f + '° high, ' + l + '° low' + (!wet && rainPct >= 30 ? ', ' + rainPct + '% chance of rain' : '') + '.';
+      };
+      const dayKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+      const paint = (d) => { const wEl = document.getElementById('io-weather'); if (wEl && d) wEl.textContent = phrase(d.hi, d.lo, d.code, d.rain); };
+      const loadWeather = () => {
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem('jojx-weather') || 'null'); } catch (e) {}
+        if (cached && cached.day === dayKey()) { paint(cached); return; }
+        if (cached) paint(cached);
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=33.985&longitude=-118.469&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles&forecast_days=1')
+          .then((r) => r.json())
+          .then((j) => {
+            const d = j.daily;
+            const rec = { day: dayKey(), hi: d.temperature_2m_max[0], lo: d.temperature_2m_min[0], code: d.weather_code[0], rain: d.precipitation_probability_max[0] };
+            try { localStorage.setItem('jojx-weather', JSON.stringify(rec)); } catch (e) {}
+            paint(rec);
+          })
+          .catch(() => {});
+      };
+      loadWeather(); setInterval(loadWeather, 30 * 60 * 1000);
+      this._typeInfo = null; this._setSky = null;
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); } });
+    };
+    attach();
+  }
+
+  videoOverlay() {
+    const attach = () => {
+      const vo = document.getElementById('vo');
+      const v = document.getElementById('vo-video');
+      if (!vo || !v) { setTimeout(attach, 120); return; }
+      if (vo.__wired) { return; }
+      vo.__wired = true;
+      const fill = document.getElementById('vo-fill');
+      const time = document.getElementById('vo-time');
+      const meta = document.getElementById('vo-meta');
+      const track = document.getElementById('vo-track');
+      const line = document.getElementById('vo-line');
+      const frameEl = vo.querySelector('.vo-frame');
+      const amb = document.createElement('canvas'); amb.width = 8; amb.height = 8;
+      const actx = amb.getContext('2d', { willReadFrequently: true });
+      let ambT = 0;
+      const sample = () => {
+        if (!vo.classList.contains('is-open')) return;
+        try {
+          actx.drawImage(v, 0, 0, 8, 8);
+          const d = actx.getImageData(0, 0, 8, 8).data;
+          let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; }
+          const n = d.length / 4; r /= n; g /= n; b /= n;
+          frameEl.style.setProperty('--amb', 'rgb(' + Math.round(255 - (255 - r) * .09) + ',' + Math.round(255 - (255 - g) * .09) + ',' + Math.round(255 - (255 - b) * .09) + ')');
+        } catch (err) { /* cross-origin frame: leave white */ }
+        ambT = setTimeout(sample, 1000);
+      };
+      v.addEventListener('timeupdate', () => { if (v.duration && line) line.style.transform = 'scaleX(' + (v.currentTime / v.duration).toFixed(4) + ')'; });
+
+      const fmt = (t) => {
+        const m = Math.floor(t / 60), sec = Math.floor(t % 60);
+        return m + ':' + String(sec).padStart(2, '0');
+      };
+
+      v.addEventListener('play', () => vo.classList.add('is-playing'));
+      v.addEventListener('pause', () => vo.classList.remove('is-playing'));
+      v.addEventListener('error', () => vo.classList.add('is-error'));
+      v.addEventListener('timeupdate', () => {
+        const d = v.duration || 0;
+        fill.style.width = d ? (v.currentTime / d * 100).toFixed(2) + '%' : '0%';
+        time.textContent = fmt(v.currentTime);
+      });
+
+      const frame = vo.querySelector('.vo-frame');
+      let ifr = null;
+      const showEmbed = (url) => {
+        if (!ifr) {
+          ifr = document.createElement('iframe');
+          ifr.className = 'vo-iframe';
+          ifr.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+          ifr.setAttribute('allowfullscreen', '');
+          ifr.setAttribute('frameborder', '0');
+          ifr.setAttribute('title', 'Film');
+          vo.querySelector('.vo-embed').appendChild(ifr);
+        }
+        const u = url + (url.includes('?') ? '&' : '?') + 'autoplay=1&muted=0&title=0&byline=0&portrait=0&dnt=1';
+        if (ifr.getAttribute('src') !== u) ifr.setAttribute('src', u);
+        vo.classList.add('is-embed');
+      };
+      const clearEmbed = () => { vo.classList.remove('is-embed'); if (ifr) ifr.removeAttribute('src'); };
+      const open = (client, dir, rect, src, clip, embed) => {
+        if (embed) { clearEmbed(); showEmbed(embed); v.pause(); }
+        else { clearEmbed(); if (clip && v.getAttribute('src') !== clip) v.setAttribute('src', clip); }
+        const box = vo.getBoundingClientRect();
+        const s = box.width / 1440 || 1;
+        if (rect) {
+          vo.style.setProperty('--vo-t', ((rect.top - box.top) / s) + 'px');
+          vo.style.setProperty('--vo-r', ((box.right - rect.right) / s) + 'px');
+          vo.style.setProperty('--vo-b', ((box.bottom - rect.bottom) / s) + 'px');
+          vo.style.setProperty('--vo-l', ((rect.left - box.left) / s) + 'px');
+          void vo.offsetWidth;
+        }
+        // shared-element ghost: the still travels from the tile into the player
+        frame.querySelectorAll('.vo-ghost').forEach((g) => g.remove());
+        if (rect && src) {
+          const g = document.createElement('img');
+          g.className = 'vo-ghost';
+          g.src = src;
+          g.style.left = ((rect.left - box.left) / s) + 'px';
+          g.style.top = ((rect.top - box.top) / s) + 'px';
+          g.style.width = (rect.width / s) + 'px';
+          g.style.height = (rect.height / s) + 'px';
+          frame.appendChild(g);
+          void g.offsetWidth;
+          g.style.left = '60px'; g.style.top = '60px';
+          g.style.width = (1440 - 120) + 'px'; g.style.height = (900 - 168) + 'px';
+          g.classList.add('is-away');
+          setTimeout(() => g.remove(), 1500);
+        }
+        meta.textContent = '';
+        [...(dir ? client + ' — ' + dir : client)].forEach((ch, i) => {
+          const sp = document.createElement('i');
+          sp.textContent = ch === ' ' ? '\u00a0' : ch;
+          sp.style.setProperty('--i', i);
+          meta.appendChild(sp);
+        });
+        vo.classList.remove('is-error');
+        vo.classList.add('is-open'); vo.classList.remove('is-muted');
+        this.ovOpen('vo', vo, close);
+        document.body.style.overflow = 'hidden';
+        // sound on: the click that opened the lightbox is the user gesture that permits it
+        if (vo.classList.contains('is-embed')) { clearTimeout(ambT); return; }
+        v.removeAttribute('muted');
+        v.defaultMuted = false;
+        v.muted = false; v.volume = 1;
+        v.currentTime = 0;
+        const unmute = () => { v.muted = false; v.defaultMuted = false; v.volume = 1; vo.classList.remove('is-muted'); };
+        v.addEventListener('playing', unmute, { once: true });
+        v.addEventListener('loadeddata', unmute, { once: true });
+        v.play().then(unmute).catch(() => { v.muted = true; v.volume = 0; vo.classList.add('is-muted'); v.play().catch(() => {}); });
+        setTimeout(() => { if (!v.paused && v.muted) unmute(); }, 500);
+        clearTimeout(ambT); ambT = setTimeout(sample, 600);
+      };
+      const close = (silent) => {
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        vo.classList.remove('is-open', 'is-muted');
+        clearEmbed();
+        document.body.style.overflow = '';
+        v.pause();
+        clearTimeout(ambT); frameEl.style.removeProperty('--amb'); if (line) line.style.transform = 'scaleX(0)';
+        if (!silent) this.ovClosed('vo');
+      };
+
+      this._openFilm = open;
+      // the films play by themselves whenever their tile is on screen
+      const live = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          const p = en.target;
+          if (en.isIntersecting) {
+            let v = p._clipEl;
+            if (!v) {
+              v = document.createElement('video');
+              v.muted = true; v.volume = 0; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.setAttribute('playsinline', '');
+              v.preload = 'auto';
+              v.src = p.dataset.clip;
+              v.addEventListener('playing', () => v.classList.add('is-live'), { once: true });
+              p.querySelector('.wp-shot').appendChild(v);
+              p._clipEl = v;
+            }
+            v.play().catch(() => {});
+          } else if (p._clipEl) {
+            p._clipEl.pause();
+          }
+        });
+      }, { rootMargin: '200px 0px' });
+      document.querySelectorAll('.wp[data-clip]').forEach((p) => live.observe(p));
+      document.querySelectorAll('.wp').forEach((p) => {
+        p.addEventListener('click', (e) => {
+          e.preventDefault();
+          const c = p.querySelector('.wp-client');
+          const d = p.querySelector('.wp-vert');
+          const shot = p.querySelector('.wp-shot') || p;
+          const img = p.querySelector('.wp-shot img');
+          open(c ? c.textContent : '', d ? d.textContent : '', shot.getBoundingClientRect(), img ? img.getAttribute('src') : '', p.dataset.clip, p.dataset.embed);
+        });
+      });
+      document.getElementById('vo-close').addEventListener('click', () => close());
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); } });
+      document.getElementById('vo-play').addEventListener('click', () => {
+        v.paused ? v.play().catch(() => {}) : v.pause();
+      });
+      document.getElementById('vo-mute').addEventListener('click', () => {
+        v.muted = vo.classList.toggle('is-muted'); v.volume = v.muted ? 0 : 1;
+      });
+      track.addEventListener('click', (e) => {
+        if (!v.duration) { return; }
+        const r = track.getBoundingClientRect();
+        v.currentTime = ((e.clientX - r.left) / r.width) * v.duration;
+      });
+    };
+    attach();
+  }
+}
+</script>
+</body>
+</html>
