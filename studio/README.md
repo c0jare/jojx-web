@@ -29,6 +29,10 @@ Ordering is done with plain reference arrays (`directorsPage.roster`, `director.
 - `contact`: general, team, representation.
 - `siteSettings`: title, tagline, share image, GA IDs, socials.
 
+## Clips
+
+Hover loops, slider frames and director reels are **not** self-hosted. Each `video` field stores a `vimeo.com/<id>` link, and the front end turns that into something playable. The old WordPress stored signed `progressive_redirect` URLs that expire; the numeric id inside them is stable, so that is what was kept. Uploading a file stays available per-field for a clip that is not on Vimeo.
+
 ## Migration from WordPress
 
-`scripts/migrate.mjs` reads `data/jojx-content-export.json` (pulled from api.jojx.co on Sept 8, 2026), uploads every image and mp4 into Sanity's asset store, and creates all documents with stable IDs (`director-<wpId>`, `project-<wpId>`). It has already been run; re-running is safe (assets are cached in `data/asset-cache.json`, documents are replaced in place). Needs `SANITY_WRITE_TOKEN` in `.env`.
+`scripts/migrate.mjs` reads `data/jojx-content-export.json` (pulled from api.jojx.co on Sept 8, 2026), uploads every image into Sanity's asset store, points every clip at Vimeo, and creates all documents with stable IDs (`director-<wpId>`, `project-<wpId>`). It has already been run; re-running is safe (assets are cached in `data/asset-cache.json`, documents are replaced in place). Needs `SANITY_WRITE_TOKEN` in `.env`.

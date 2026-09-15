@@ -34,6 +34,9 @@ const saveCache = () => writeFileSync(cachePath, JSON.stringify(cache, null, 1))
 const slugify = (s) =>
   s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 const vimeoId = (u) => (u && u.match(/vimeo\.com\/(?:video\/)?(\d+)/) || [])[1]
+// clip URLs come in three WordPress flavours; all of them carry the Vimeo id of the clip itself
+const clipVimeoId = (u) =>
+  u ? (u.match(/\/playback\/(\d+)\//) || u.match(/\/external\/(\d+)\./) || u.match(/vimeo\.com\/(?:video\/)?(\d+)/) || [])[1] : undefined
 const cleanVimeo = (u) => (vimeoId(u) ? `https://vimeo.com/${vimeoId(u)}` : u)
 const block = (text) =>
   text
@@ -67,11 +70,10 @@ const image = async (img, label) => {
   const id = await upload('image', img.url, label)
   return id ? {_type: 'image', asset: {_type: 'reference', _ref: id}, ...(img.alt ? {alt: img.alt} : {})} : undefined
 }
-const video = async (url, label) => {
-  if (!url) return undefined
-  if (NO_VIDEO) return {_type: 'video', sourceUrl: url}
-  const id = await upload('file', url, label)
-  return {_type: 'video', sourceUrl: url, ...(id ? {file: {_type: 'file', asset: {_type: 'reference', _ref: id}}} : {})}
+// clips point at Vimeo rather than being copied into Sanity; the id is pulled out of the old WordPress URL
+const video = async (url) => {
+  const id = clipVimeoId(url)
+  return id ? {_type: 'video', source: 'vimeo', vimeoUrl: `https://vimeo.com/${id}`} : undefined
 }
 
 const docs = []
@@ -97,7 +99,7 @@ for (const [di, d] of data.directors.entries()) {
     bio: d.bio || undefined,
     abstract: d.abstract || undefined,
     coverImage: await image(d.coverImage, `${d.name} cover`),
-    reel: await video(d.reelVideoUrl, `${d.name} reel`),
+    reel: await video(d.reelVideoUrl),
     bioImage: await image(d.bioImage, `${d.name} bio photo`),
     links: (d.links || []).filter((l) => l.url).map((l, i) => ({_type: 'link', _key: `l${i}`, label: l.label || 'Link', url: l.url, text: l.text || undefined})),
   })
@@ -117,7 +119,7 @@ for (const [di, d] of data.directors.entries()) {
       externalLink: p.externalLink || undefined,
       vimeoUrl: cleanVimeo(p.vimeoUrl),
       still: await image(p.still, `${d.name} / ${p.brand} still`),
-      loop: await video(p.still?.loopVideoUrl, `${d.name} / ${p.brand} loop`),
+      loop: await video(p.still?.loopVideoUrl),
       secondaryStill: await image(p.secondaryStill, `${d.name} / ${p.brand} second still`),
       gridSize: p.gridType || 'half-width',
     })
@@ -150,7 +152,7 @@ for (const [fi, f] of data.featured.entries()) {
       blurb: f.blurb || undefined,
       vimeoUrl: cleanVimeo(f.vimeoUrl),
       still: await image(f.still, `featured ${f.brand} still`),
-      loop: await video(f.still?.loopVideoUrl, `featured ${f.brand} loop`),
+      loop: await video(f.still?.loopVideoUrl),
       gridSize: f.gridType || 'half-width',
     })
   }
@@ -169,7 +171,7 @@ docs.push({
       (data.home.gallery || []).map(async (g, i) => {
         const img = await image(g, `slider ${i} still`)
         if (!img) return null
-        return {_type: 'galleryItem', _key: `g${i}`, image: img, loop: await video(g.loopVideoUrl, `slider ${i} clip`)}
+        return {_type: 'galleryItem', _key: `g${i}`, image: img, loop: await video(g.loopVideoUrl)}
       }),
     )
   ).filter(Boolean),
