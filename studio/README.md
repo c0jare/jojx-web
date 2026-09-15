@@ -24,7 +24,7 @@ Ordering is done with plain reference arrays (`directorsPage.roster`, `director.
 - `director`: name, slug, bio, abstract, cover still, reel (mp4), bio photo, links, and `work` (that director's spots in page order, drag to reorder).
 - `project`: brand, spot title, director, slug, blurb, Vimeo link (full spot, opens in the popup), still, hover loop (mp4), second still, grid size.
 - `directorsPage`: the roster in site order. Drag to reorder.
-- `homepage`: featured work (references to projects, drag to reorder), gallery, phone line.
+- `homepage`: featured work (references to projects, drag to reorder), slider (each frame is a still plus an optional motion clip), phone line.
 - `infoPage`: mission, hero image.
 - `contact`: general, team, representation.
 - `siteSettings`: title, tagline, share image, GA IDs, socials.

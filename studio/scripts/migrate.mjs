@@ -164,7 +164,15 @@ docs.push({
   _type: 'homepage',
   phone: data.home.phoneLine || undefined,
   featuredWork: featuredRefs,
-  gallery: (await Promise.all((data.home.gallery || []).map((g, i) => image(g, `gallery ${i}`)))).filter(Boolean).map((g, i) => ({...g, _key: `g${i}`})),
+  gallery: (
+    await Promise.all(
+      (data.home.gallery || []).map(async (g, i) => {
+        const img = await image(g, `slider ${i} still`)
+        if (!img) return null
+        return {_type: 'galleryItem', _key: `g${i}`, image: img, loop: await video(g.loopVideoUrl, `slider ${i} clip`)}
+      }),
+    )
+  ).filter(Boolean),
 })
 docs.push({
   _id: 'infoPage',

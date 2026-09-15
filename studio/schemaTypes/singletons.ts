@@ -22,10 +22,10 @@ export const homepage = defineType({
     }),
     defineField({
       name: 'gallery',
-      title: 'Image gallery',
+      title: 'Slider',
       type: 'array',
-      description: 'Side-scrolling gallery of stills.',
-      of: [{type: 'image', options: {hotspot: true}, fields: [{name: 'alt', title: 'Alt text', type: 'string'}]}],
+      description: 'The frames that scroll across the top of the homepage. Each one can be a still or a short motion clip. Drag to reorder.',
+      of: [{type: 'galleryItem'}],
     }),
     defineField({name: 'phone', title: 'Phone line', type: 'string', description: 'Shown in the header, e.g. "P — 310 732 0034".'}),
   ],
