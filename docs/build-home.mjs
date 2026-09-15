@@ -22,7 +22,7 @@ const data = await c.fetch(`{
     "still": still.asset->url
   },
   "rosterRefs": *[_id=="directorsPage"][0].roster[]._ref,
-  "directors": *[_type=="director"]{_id, name, "cover": coverImage.asset->url, "reel": reel.vimeoUrl}
+  "directors": *[_type=="director"]{_id, name, "slug": slug.current, "cover": coverImage.asset->url, "reel": reel.vimeoUrl}
 }`)
 
 // dereferencing an array of refs in GROQ does not preserve the array's order, so the roster
@@ -102,7 +102,7 @@ const names = roster.map((d) => {
   const first = parts.length > 1 ? parts.slice(0, -1).join(' ') : ''
   const last = parts.at(-1)
   const clip = clipUrl(d.reel)
-  return `        <a class="do-name" href="#work" data-still="${esc(img(d.cover, 1200))}"${clip ? ` data-clip="${esc(clip)}"` : ''}>${first ? `<em>${esc(first)}</em> ` : ''}<span>${esc(last)}</span></a>`
+  return `        <a class="do-name" href="#work" data-slug="${esc(d.slug)}" data-still="${esc(img(d.cover, 1200))}"${clip ? ` data-clip="${esc(clip)}"` : ''}>${first ? `<em>${esc(first)}</em> ` : ''}<span>${esc(last)}</span></a>`
 }).join('\n')
 
 // swap each block in, adding the markers the first time so later runs have something to aim at

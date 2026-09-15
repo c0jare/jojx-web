@@ -71,14 +71,18 @@ const splitName = (n) => {
   const parts = String(n || '').trim().split(/\s+/)
   return parts.length < 2 ? {first: '', last: parts[0] || ''} : {first: parts.slice(0, -1).join(' '), last: parts.at(-1)}
 }
-const findLink = (links, kind) =>
-  (links || []).find((l) => new RegExp(kind, 'i').test(l.label || '') || new RegExp(kind, 'i').test(l.url || ''))
+// a director's links are just labelled URLs, so match on the host rather than the label:
+// "instagram.com" contains ".com", which used to make an Instagram link look like a website
+const SOCIALS = /(instagram|facebook|twitter|x\.com|vimeo|linkedin|tiktok|youtube)\./i
+const findSocial = (links, host) => (links || []).find((l) => new RegExp(host, 'i').test(l.url || ''))
+const findSite = (links) => (links || []).find((l) => l.url && !SOCIALS.test(l.url))
 
 const DIRECTORS = {}
 for (const d of data.directors) {
   const {first, last} = splitName(d.name)
-  const site = findLink(d.links, 'website|\\.com')
-  const ig = findLink(d.links, 'insta')
+  const site = findSite(d.links)
+  const ig = findSocial(d.links, 'instagram')
+
   DIRECTORS[d.slug] = {
     first, last,
     lead: d.bio || '',

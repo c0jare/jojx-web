@@ -337,8 +337,8 @@ export const DIRECTORS = {
   "bio": "Newman’s honest narratives encourage the characters in her films to be active participants in the storytelling, to tell their own stories, in their own way. She is inspired to bring her conscious aesthetic to commercial filmmaking, championing equal representation both in front of and behind the camera.",
   "reel": "https://player.vimeo.com/progressive_redirect/playback/1196477272/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=2a046dcc34eea73c7b4738ee4a32ebcd3f47194add3156b3a8d53138d57bd2dd",
   "still": "https://cdn.sanity.io/images/q198rjlt/production/0d7d5eba9cb98436b46b5a72c6c6963930725fd8-3840x2160.jpg",
-  "site": "@jabunewman",
-  "siteUrl": "https://www.instagram.com/jabunewman/?hl=en",
+  "site": "",
+  "siteUrl": "",
   "ig": "@jabunewman",
   "igUrl": "https://www.instagram.com/jabunewman/?hl=en",
   "work": [
@@ -1100,8 +1100,8 @@ export const DIRECTORS = {
   "bio": "He has worked throughout the world including UK, USA, South America, Europe, The Middle East, North Africa, China and Australia; with brands such as Lurpak, BMW, EE, BAFTA, Betty Crocker, KFC, Carex, Ecco, Jacob’s Creek and Etihad.\nIn a former life, Paul worked as an advertising Producer and Line Producer with some of the industries most iconic Directors, as well as in production departments on movies such as James Bond Casino Royale and City Of Ember.",
   "reel": "https://player.vimeo.com/progressive_redirect/playback/560247868/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=1d0880be83baf28af95272f0c3e2c57b81c51f90f47d0a61ebc6d8e420fc2cf4",
   "still": "https://cdn.sanity.io/images/q198rjlt/production/a857dc543752e70ed04ecaef825248cdefd9f57a-3566x1738.jpg",
-  "site": "@heybutts",
-  "siteUrl": "https://www.instagram.com/heybutts",
+  "site": "",
+  "siteUrl": "",
   "ig": "@heybutts",
   "igUrl": "https://www.instagram.com/heybutts",
   "work": [
