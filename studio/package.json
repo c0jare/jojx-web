@@ -1,0 +1,26 @@
+{
+  "name": "jojx-studio",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate:dry": "node scripts/migrate.mjs --dry"
+  },
+  "dependencies": {
+    "@sanity/vision": "^6.13.0",
+    "jsdom": "^30.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sanity": "^6.13.0",
+    "styled-components": "^6.1.18"
+  },
+  "devDependencies": {
+    "@sanity/client": "^8.6.1",
+    "@types/node": "^26.5.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.8.0"
+  }
+}

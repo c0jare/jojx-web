@@ -1,0 +1,111 @@
+import {defineField, defineType} from 'sanity'
+
+// Mirrors the WordPress director page: Title, Content (bio), Featured image (+ reel URL in image meta),
+// Secondary Featured Image (bio photo), Talent Meta → Abstract, Talent Meta → Contact Info.
+export default defineType({
+  name: 'director',
+  title: 'Director',
+  type: 'document',
+  groups: [
+    {name: 'main', title: 'Main', default: true},
+    {name: 'media', title: 'Reel & images'},
+    {name: 'work', title: 'Work'},
+    {name: 'links', title: 'Links'},
+  ],
+  fields: [
+    defineField({
+      name: 'name',
+      title: 'Name',
+      type: 'string',
+      group: 'main',
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'slug',
+      title: 'URL slug',
+      type: 'slug',
+      group: 'main',
+      options: {source: 'name', maxLength: 64},
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'bio',
+      title: 'Bio',
+      type: 'text',
+      rows: 5,
+      group: 'main',
+      description: 'First paragraph, shown on the director page.',
+    }),
+    defineField({
+      name: 'abstract',
+      title: 'Abstract',
+      type: 'text',
+      rows: 5,
+      group: 'main',
+      description: 'Second paragraph, shown on the reel page.',
+    }),
+    defineField({
+      name: 'coverImage',
+      title: 'Cover still',
+      type: 'image',
+      group: 'media',
+      options: {hotspot: true},
+      description: 'Poster frame shown before the reel loads and on the roster.',
+      fields: [{name: 'alt', title: 'Alt text', type: 'string'}],
+    }),
+    defineField({
+      name: 'reel',
+      title: 'Reel',
+      type: 'video',
+      group: 'media',
+      description: 'The full reel that plays on the director page.',
+    }),
+    defineField({
+      name: 'bioImage',
+      title: 'Bio photo',
+      type: 'image',
+      group: 'media',
+      options: {hotspot: true},
+      description: 'Portrait shown next to the bio on the reel page.',
+      fields: [{name: 'alt', title: 'Alt text', type: 'string'}],
+    }),
+    defineField({
+      name: 'links',
+      title: 'Links',
+      type: 'array',
+      group: 'links',
+      description: 'Website, Instagram, etc.',
+      of: [
+        {
+          type: 'object',
+          name: 'link',
+          fields: [
+            {name: 'label', title: 'Label', type: 'string', validation: (r) => r.required()},
+            {name: 'url', title: 'URL', type: 'url', validation: (r) => r.required()},
+            {name: 'text', title: 'Link text', type: 'string', description: 'What the visitor sees, e.g. @handle'},
+          ],
+          preview: {select: {title: 'label', subtitle: 'text'}},
+        },
+      ],
+    }),
+    defineField({
+      name: 'work',
+      title: 'Work',
+      type: 'array',
+      group: 'work',
+      description: 'The order spots appear on this director\u2019s page. Drag to reorder.',
+      of: [{type: 'reference', to: [{type: 'project'}], options: {filter: 'director._ref == $id', filterParams: {id: '__id__'}}}],
+      validation: (r) => r.unique(),
+    }),
+    defineField({
+      name: 'wpId',
+      title: 'WordPress ID',
+      type: 'number',
+      hidden: true,
+      readOnly: true,
+    }),
+  ],
+  preview: {
+    select: {title: 'name', media: 'coverImage'},
+  },
+})
