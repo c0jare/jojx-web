@@ -337,8 +337,8 @@ export const DIRECTORS = {
   "bio": "Newman’s honest narratives encourage the characters in her films to be active participants in the storytelling, to tell their own stories, in their own way. She is inspired to bring her conscious aesthetic to commercial filmmaking, championing equal representation both in front of and behind the camera.",
   "reel": "https://player.vimeo.com/progressive_redirect/playback/1196477272/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=2a046dcc34eea73c7b4738ee4a32ebcd3f47194add3156b3a8d53138d57bd2dd",
   "still": "https://cdn.sanity.io/images/q198rjlt/production/0d7d5eba9cb98436b46b5a72c6c6963930725fd8-3840x2160.jpg",
-  "site": "jabunewman.com",
-  "siteUrl": "https://www.jabunewman.com/",
+  "site": "@jabunewman",
+  "siteUrl": "https://www.instagram.com/jabunewman/?hl=en",
   "ig": "@jabunewman",
   "igUrl": "https://www.instagram.com/jabunewman/?hl=en",
   "work": [
@@ -598,7 +598,7 @@ export const DIRECTORS = {
  },
  "martin-krejci": {
   "first": "Martin",
-  "last": "Krejci",
+  "last": "Krejčí",
   "lead": "Martin Krejči is a cinematic visionary whose filmmaking is defined by his commitment to precision and craft. His classical foundation has fuelled an acclaimed career operating at a level most directors spend a lifetime chasing.",
   "bio": "With work that refuses to be categorized, yet consistently inspires, he moves seamlessly between performance-driven storytelling, sharp comedy and technical innovation. With strong visual aesthetics and heightened narratives, he elicits unforgettable performances from the likes of Helen Mirren, David Beckham, Mel Gibson, Chloe Sevigny and more.\nHis conceptual approach to filmmaking elevates ordinary concepts into extraordinary cinematic experiences. Krejči constantly redefines his creative boundaries and lives on the right side of unpredictable.",
   "reel": "https://player.vimeo.com/progressive_redirect/playback/1198577992/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=42e93f4582a7467fed41e00972773c020a57545e3cecc4b1b88d0d6061b85ea9",
@@ -624,7 +624,7 @@ export const DIRECTORS = {
    },
    {
     "client": "Adidas",
-    "title": "",
+    "title": "Adi Dassler",
     "still": "https://cdn.sanity.io/images/q198rjlt/production/92cba61dcba0fd6d06e2e116052c1f0a246eb6b2-1024x576.jpg",
     "clip": "https://player.vimeo.com/progressive_redirect/playback/1199512019/rendition/540p/file.mp4%20%28540p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=cd116047ab50eca55156a72d741b222ff4f4cfcb5e7115bf1ba5b04c578f05f6",
     "filmUrl": "https://vimeo.com/1199510700"
@@ -1192,8 +1192,8 @@ export const DIRECTORS = {
   ]
  },
  "per-hampus": {
-  "first": "",
-  "last": "Per-Hampus",
+  "first": "Per-Hampus",
+  "last": "Stålhandske",
   "lead": "Per-Hampus grew up in a village in northern Sweden.",
   "bio": "He discovered filmmaking through his passion for snowboarding and started filming his eclectic friends at the local ski-hills and makeshift mini-ramps. Before long he was following the top athletes around the world creating iconic snowboard films in some of the earliest forms of branded content.\nHis years in snow culminated in the creation of Nike’s 2014 flagship film, “Never Not.” A ground-breaking sports documentary, reaching the top of the iTunes charts worldwide and starring olympic gold medallist Sage Kotsenburg. Much like the nordic landscape that shaped him, Per has a uniquely beautiful vision for the world. Capturing all nuances of life with an authentic and cinematic approach.",
   "reel": "https://player.vimeo.com/progressive_redirect/playback/560214680/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&oauth2_token_id=1826130258&signature=d3f4663a3a92f8330460f1c3f4912b3a19693fd4b8f31258aa8e97d944ab4862",
